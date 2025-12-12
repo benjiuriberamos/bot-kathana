@@ -6,7 +6,7 @@ import time
 import threading
 
 from estado_objetivo import estado, TipoObjetivo
-from configuracion import VK_CODES
+from configuracion import VK_CODES, LOOT_DROP
 
 # Constantes de Windows para teclado
 WM_KEYDOWN = 0x0100
@@ -29,6 +29,7 @@ class HiloRecogerDrop:
         self.user32 = None
         self.ejecutando = False
         self.thread = None
+        self.config_loot = LOOT_DROP
 
     # ---------------------------------------------
     # Helpers de teclado
@@ -54,9 +55,8 @@ class HiloRecogerDrop:
         """
         Ejecuta la acción de loot:
         - Pausa todos los hilos
-        - Presiona F 3 veces (0.5s entre cada una)
-        - Espera ~3s total
-        - Reactiva hilos
+        - Presiona F N veces (configurable) con un intervalo configurable
+        - Reactiva hilos al finalizar
         """
         print("[LOOT] 🎁 Mob murió - Ejecutando secuencia de loot (hilo_recoger_drop)...")
 
@@ -66,12 +66,15 @@ class HiloRecogerDrop:
         # Pausar todos los hilos
         estado.pausar_todos_los_hilos()
 
-        # Presionar F 3 veces
-        for i in range(3):
+        repeticiones = max(0, int(self.config_loot.get('repeticiones_f', 3)))
+        intervalo = float(self.config_loot.get('intervalo_f', 0.5))
+
+        # Presionar F repeticiones configuradas
+        for i in range(repeticiones):
             self._presionar_tecla_f()
-            print(f"[LOOT] Tecla F presionada ({i+1}/3)")
-            if i < 2:
-                time.sleep(0.5)
+            print(f"[LOOT] Tecla F presionada ({i+1}/{repeticiones})")
+            if i < repeticiones - 1:
+                time.sleep(intervalo)
 
         # Esperar hasta ~1.s totales (0.5 + 0.5 + 0.5)
         # time.sleep(0.5)

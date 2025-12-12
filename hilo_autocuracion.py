@@ -266,16 +266,16 @@ class HiloAutocuracion:
         self.thread_vida.start()
         
         # Hilo para maná
-        self.thread_mana = threading.Thread(target=self._ciclo_mana, daemon=True)
-        self.thread_mana.start()
+        # self.thread_mana = threading.Thread(target=self._ciclo_mana, daemon=True)
+        # self.thread_mana.start()
     
     def detener(self) -> None:
         """Detiene los hilos de autocuración."""
         self.ejecutando = False
         if self.thread_vida:
             self.thread_vida.join(timeout=2)
-        if self.thread_mana:
-            self.thread_mana.join(timeout=2)
+        # if self.thread_mana:
+        #     self.thread_mana.join(timeout=2)
     
     def mostrar_configuracion(self) -> None:
         """Muestra la configuración actual de autocuración."""

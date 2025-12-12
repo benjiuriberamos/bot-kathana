@@ -22,7 +22,7 @@ OCR_REGION = {
 }
 
 # Umbral de similitud mínimo para considerar una coincidencia
-UMBRAL_SIMILITUD = 0.52
+UMBRAL_SIMILITUD = 0.80
 
 # ============================================================
 # LISTA DE MOBS QUE QUIERO MATAR
@@ -36,21 +36,28 @@ MOBS_OBJETIVO = [
     # "Aganna Tara (39)",
     # "Pizza Aganna (39)",
     # "Kaulitara (41)",
-    "Borangi (54)",
-    "Byokbo (56)",
-    # "Ban Gosu (52)",
-    # "Ban (50)",
-    "Zinkiu Gosu (58)",
-    "Zinkiu (53)",
+    # "Borangi (54)",
+    # "Byokbo (56)",
+    # # "Ban Gosu (52)",
+    # # "Ban (50)",
+    # "Zinkiu Gosu (58)",
+    # "Zinkiu (53)",
     
-    # "Zinmon (51)",
-    # "Zinmon Gosu (55)",
+    # # "Zinmon (51)",
+    # # "Zinmon Gosu (55)",
 
-    "Mangrian (50)",
-    "Kyoin (48)",
+    # "Mangrian (50)",
+    # "Kyoin (48)",
 
-    "Zaku (45)",
-    "Zaku Gosu (47)",
+    # "Zaku (45)",
+    # "Zaku Gosu (47)",
+    # "Varaha (15)",
+    "Aprah Varaha Raja (15)",
+    "Srbinda (21)",
+    "Saraa Vrca (17)",
+    "Ulkamukha (21)",
+    "Ulkamukha Caura (23)",
+    "Ulkamukha Satvan (25)",
 
     # "Zarku (46)",
     # "Zarku Rudhira (48)",
@@ -70,6 +77,14 @@ DROP_ITEMS_OBJETIVO = [
     # "Rupiah",
     # Agrega más items aquí...
 ]
+
+# ============================================================
+# CONFIGURACIÓN DE LOOT/DROP
+# ============================================================
+LOOT_DROP = {
+    'repeticiones_f': 0,    # Veces que se presionará la tecla F
+    'intervalo_f': 0.5,     # Segundos de espera entre cada pulsación
+}
 
 # ============================================================
 # CONFIGURACIÓN DE HABILIDADES
@@ -123,7 +138,7 @@ OBSERVADOR_OBJETIVO = {
 # Alterna entre los puntos cada vez que se ejecuta
 # ============================================================
 ESCAPE_MOB = {
-    'timeout_mob': 15.0,         # Segundos antes de considerar que el mob está trabado
+    'timeout_mob': 25.0,         # Segundos antes de considerar que el mob está trabado
     'puntos_clic': [
         {'x': 790, 'y': 40},     # Punto 1 - Primera vez que se trabe
         {'x': 790, 'y': 500},    # Punto 4 - Segunda vez que se trabe (cambia estas coordenadas)
