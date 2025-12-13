@@ -33,9 +33,9 @@ MOBS_OBJETIVO = [
     # "Sobariung (54)",
     # "Sobariung Gosu (56)",
     # "Balastha Drbhika (62)",
-    # "Aganna Tara (39)",
-    # "Pizza Aganna (39)",
-    # "Kaulitara (41)",
+    "Aganna Tara (39)",
+    "Pizza Aganna (39)",
+    "Kaulitara (41)",
     # "Borangi (54)",
     # "Byokbo (56)",
     # # "Ban Gosu (52)",
@@ -54,10 +54,16 @@ MOBS_OBJETIVO = [
     # "Varaha (15)",
     "Aprah Varaha Raja (15)",
     "Srbinda (21)",
+    "Srbinda Satvan (23)",
     "Saraa Vrca (17)",
     "Ulkamukha (21)",
     "Ulkamukha Caura (23)",
     "Ulkamukha Satvan (25)",
+    "Ananga (25)",
+    "Visa Curni (27)",
+    "Ugra Ulkamukha Satvan (32)",
+    "Ugra Ulkamukha Caura (30)",
+    "Ugra Ulkamukha (28)",
 
     # "Zarku (46)",
     # "Zarku Rudhira (48)",
@@ -75,6 +81,8 @@ DROP_ITEMS_OBJETIVO = [
     # "Spara Panaka",
     # "Spara Amrita",
     # "Rupiah",
+    # "Toronja"
+
     # Agrega más items aquí...
 ]
 
@@ -101,6 +109,7 @@ HABILIDADES = {
     '7': {'active': False,  'time': 15.0},   # Habilidad 7
     '8': {'active': False, 'time': 1.0},   # Habilidad 8
     'F': {'active': False,  'time': 1.0},   # Tecla F
+    'R': {'active': False,  'time': 0.5},   # Tecla F
     # 'S': {'active': True,  'time': 10.0},  # Tecla S
 }
 
@@ -138,12 +147,14 @@ OBSERVADOR_OBJETIVO = {
 # Alterna entre los puntos cada vez que se ejecuta
 # ============================================================
 ESCAPE_MOB = {
-    'timeout_mob': 25.0,         # Segundos antes de considerar que el mob está trabado
+    'pjname': "Toronja",
+    'timeout_mob': 3.0,         # Segundos antes de considerar que el mob está trabado
+    'punto_click_primero': {'x': 405, 'y': 360},
     'puntos_clic': [
-        {'x': 790, 'y': 40},     # Punto 1 - Primera vez que se trabe
-        {'x': 790, 'y': 500},    # Punto 4 - Segunda vez que se trabe (cambia estas coordenadas)
-        {'x': 220, 'y': 40},    # Punto 2 - Segunda vez que se trabe (cambia estas coordenadas)
-        {'x': 40, 'y': 450},     # Punto 3 - Segunda vez que se trabe (cambia estas coordenadas)
+        {'x': 790, 'y': 60},     # Punto 1 - Primera vez que se trabe
+        # {'x': 790, 'y': 500},    # Punto 4 - Segunda vez que se trabe (cambia estas coordenadas)
+        # {'x': 220, 'y': 40},    # Punto 2 - Segunda vez que se trabe (cambia estas coordenadas)
+        # {'x': 40, 'y': 450},     # Punto 3 - Segunda vez que se trabe (cambia estas coordenadas)
     ],
     'veces': 5,                  # Veces que se hace clic en el punto
     'duracion_total': 3.0,       # Duración total de la secuencia de escape (segundos)

@@ -80,6 +80,12 @@ class HiloMobTrabado:
         veces = ESCAPE_MOB["veces"]
         duracion = ESCAPE_MOB["duracion_total"]
         intervalo = duracion / veces
+
+        punto_click_primero = ESCAPE_MOB["punto_click_primero"]
+
+        
+
+        print(f"[ESCAPE] Clic en ({punto_click_primero["x"]}, {punto_click_primero["y"]})")
         for i in range(veces):
             self._hacer_clic(click_x, click_y)
             print(f"[ESCAPE] Clic en ({click_x}, {click_y}) - ({i+1}/{veces})")
@@ -87,6 +93,15 @@ class HiloMobTrabado:
                 time.sleep(intervalo)
 
         time.sleep(0.2)
+
+        self._hacer_clic(punto_click_primero["x"], punto_click_primero["y"])
+        print("click en la cabeza del personaje")
+        time.sleep(0.3)
+        self._hacer_clic(punto_click_primero["x"], punto_click_primero["y"])
+        print("click en la cabeza del personaje")
+        time.sleep(0.3)
+        self._hacer_clic(punto_click_primero["x"], punto_click_primero["y"])
+        print("click en la cabeza del personaje")
 
         # Reactivar hilos
         estado.reactivar_todos_los_hilos()
@@ -165,4 +180,69 @@ class HiloMobTrabado:
         self.ejecutando = False
         if self.thread:
             self.thread.join(timeout=2)
+    
+    def mostrar_configuracion(self) -> None:
+        """Muestra la configuración actual de escape."""
+        print("\n[CONFIGURACIÓN DE ESCAPE (MOB TRABADO)]")
+        print("-" * 50)
+        print(f"  Timeout por defecto: {ESCAPE_MOB['timeout_mob']}s")
+        print(f"  Veces de clic: {ESCAPE_MOB['veces']}")
+        print(f"  Duración total: {ESCAPE_MOB['duracion_total']}s")
+        print(f"  Puntos de clic: {len(ESCAPE_MOB['puntos_clic'])}")
+        for i, punto in enumerate(ESCAPE_MOB['puntos_clic'], 1):
+            print(f"    Punto {i}: ({punto['x']}, {punto['y']})")
+        if ESCAPE_BY_MOB:
+            print(f"\n  Timeouts personalizados por mob:")
+            for mob, timeout in ESCAPE_BY_MOB.items():
+                print(f"    {mob}: {timeout}s")
+        print("-" * 50)
+
+
+# ============================================================
+# PRUEBA INDEPENDIENTE
+# ============================================================
+if __name__ == "__main__":
+    from game_window import GameWindow
+    from configuracion import GAME_WINDOW_TITLE
+    
+    try:
+        print("=" * 60)
+        print("PRUEBA DEL HILO DE MOB TRABADO")
+        print("=" * 60)
+        
+        # Buscar ventana
+        print("\n[INFO] Buscando ventana del juego...")
+        game_window = GameWindow(GAME_WINDOW_TITLE)
+        print(f"[OK] Ventana encontrada (Handle: {game_window.hwnd})")
+        
+        # Crear e iniciar hilo
+        hilo = HiloMobTrabado(game_window.hwnd)
+        hilo.mostrar_configuracion()
+        
+        print("\n[INFO] Iniciando hilo de mob trabado...")
+        print("[INFO] Presiona Ctrl+C para detener")
+        print("-" * 60)
+        
+        hilo.iniciar()
+        
+        # Mantener corriendo
+        while True:
+            info = estado.obtener_info()
+            if info['tipo'] == TipoObjetivo.MOB:
+                tiempo_escape = ESCAPE_BY_MOB.get(info['nombre_coincidente'], ESCAPE_MOB["timeout_mob"])
+                print(f"[STATUS] Mob: {info['nombre_coincidente']} | "
+                      f"Tiempo: {info['tiempo_en_estado']:.1f}s / {tiempo_escape}s | "
+                      f"Punto actual: {hilo._escape_punto_actual + 1}", end='\r')
+            else:
+                print(f"[STATUS] Tipo: {info['tipo'].value} | "
+                      f"Tiempo: {info['tiempo_en_estado']:.1f}s", end='\r')
+            time.sleep(0.5)
+            
+    except KeyboardInterrupt:
+        print("\n\n[INFO] Hilo detenido por el usuario")
+        hilo.detener()
+        print("[OK] Script finalizado")
+        
+    except Exception as e:
+        print(f"\n[ERROR] {e}")
 
