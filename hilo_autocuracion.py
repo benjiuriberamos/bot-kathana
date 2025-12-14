@@ -40,39 +40,31 @@ COLORES_VIDA = [
     (80, 0, 0), (60, 0, 0),
 ]
 
-# Colores válidos para maná (azules de la barra del juego)
+# Colores válidos para maná (azules celestes de la barra del juego)
+# Solo colores claros y medios brillantes, sin oscuros que se acerquen al marrón
 COLORES_MANA = [
-    # Azules brillantes puros (parte clara de la barra)
+    # Azules brillantes puros (parte clara de la barra - celestes)
     (0, 0, 255), (0, 0, 254), (0, 0, 253), (0, 0, 252), (0, 0, 251), (0, 0, 250),
     (10, 10, 255), (20, 20, 255), (30, 30, 255), (40, 40, 255), (50, 50, 255),
     (60, 60, 255), (70, 70, 255), (80, 80, 255), (90, 90, 255), (100, 100, 255),
     
-    # Azules medios (gradiente de la barra)
+    # Azules medios brillantes (gradiente de la barra - celestes medios)
     (0, 0, 240), (0, 0, 230), (0, 0, 220), (0, 0, 210), (0, 0, 200),
     (10, 10, 240), (20, 20, 230), (30, 30, 220), (40, 40, 210), (50, 50, 200),
     (0, 0, 190), (0, 0, 180), (0, 0, 170), (0, 0, 160), (0, 0, 150),
     
-    # Azules oscuros (parte oscura de la barra)
-    (0, 0, 140), (0, 0, 130), (0, 0, 120), (0, 0, 110), (0, 0, 100),
-    (10, 10, 140), (20, 20, 130), (30, 30, 120), (40, 40, 110), (50, 50, 100),
-    (0, 0, 90), (0, 0, 80), (0, 0, 70), (0, 0, 60), (0, 0, 50),
-    
-    # Azules muy oscuros (borde de la barra)
-    (0, 0, 40), (0, 0, 30), (0, 0, 20), (10, 10, 40), (20, 20, 30),
-    
-    # Azules con algo de verde (variaciones de la barra)
+    # Azules con algo de verde (variaciones celestes)
     (0, 20, 255), (0, 40, 255), (0, 60, 255), (0, 80, 255), (0, 100, 255),
     (0, 20, 200), (0, 40, 200), (0, 60, 200), (0, 80, 200),
     (0, 20, 150), (0, 40, 150), (0, 60, 150),
     
-    # Azules con algo de rojo (posibles reflejos)
+    # Azules con algo de rojo (posibles reflejos celestes)
     (20, 0, 255), (40, 0, 255), (60, 0, 255), (80, 0, 255),
     (20, 0, 200), (40, 0, 200), (60, 0, 200),
     (20, 0, 150), (40, 0, 150),
     
-    # Azules mixtos (R, G bajos, B alto)
+    # Azules mixtos claros (R, G bajos, B alto - solo los más claros)
     (30, 40, 255), (40, 50, 240), (50, 60, 220), (60, 70, 200),
-    (30, 40, 180), (40, 50, 160), (50, 60, 140),
 ]
 
 
@@ -183,9 +175,9 @@ class HiloAutocuracion:
             if self._colores_similares(color, color_mana):
                 return True, color
         
-        # REGLA PRINCIPAL: El azul es el componente dominante
-        # La barra de maná tiene B mucho mayor que R y G
-        if b > 50:
+        # REGLA PRINCIPAL: El azul es el componente dominante (solo colores claros/celestes)
+        # La barra de maná tiene B mucho mayor que R y G, y debe ser suficientemente brillante
+        if b >= 150:  # Solo azules claros/celestes, no oscuros
             # Si el azul es significativamente mayor que rojo y verde
             if b > r and b > g:
                 # Y la diferencia es notable (al menos 20 puntos más que el mayor de R,G)
@@ -193,9 +185,9 @@ class HiloAutocuracion:
                 if b > (max_rg + 20):
                     return True, color
         
-        # REGLA SECUNDARIA: Azul alto aunque R y G también tengan algo
-        # Para azules como (50, 50, 200) o (80, 80, 255)
-        if b >= 100 and b >= r and b >= g:
+        # REGLA SECUNDARIA: Azul alto aunque R y G también tengan algo (solo celestes claros)
+        # Para azules como (50, 50, 200) o (80, 80, 255) - solo si son suficientemente brillantes
+        if b >= 150 and b >= r and b >= g:
             # El azul debe ser al menos 1.5 veces el promedio de R y G
             promedio_rg = (r + g) / 2
             if promedio_rg == 0 or b >= (promedio_rg * 1.5):
@@ -221,9 +213,11 @@ class HiloAutocuracion:
             if tiene_vida:
                 time.sleep(config['intervalo_con'])
             else:
+                # Obtener tipo una vez antes del loop
+                tipo_actual = estado.tipo
                 print(f"[VIDA] Sin vida | Color: RGB{color} | Presionando '{config['tecla']}'")
                 for tecla in config['tecla']:
-                    if estado.tipo != TipoObjetivo.MOB and tecla != '0':
+                    if tipo_actual != TipoObjetivo.MOB and tecla != '0':
                         continue
                     self._presionar_tecla(tecla)
                 time.sleep(config['intervalo_sin'])
@@ -266,16 +260,16 @@ class HiloAutocuracion:
         self.thread_vida.start()
         
         # Hilo para maná
-        # self.thread_mana = threading.Thread(target=self._ciclo_mana, daemon=True)
-        # self.thread_mana.start()
+        self.thread_mana = threading.Thread(target=self._ciclo_mana, daemon=True)
+        self.thread_mana.start()
     
     def detener(self) -> None:
         """Detiene los hilos de autocuración."""
         self.ejecutando = False
         if self.thread_vida:
             self.thread_vida.join(timeout=2)
-        # if self.thread_mana:
-        #     self.thread_mana.join(timeout=2)
+        if self.thread_mana:
+            self.thread_mana.join(timeout=2)
     
     def mostrar_configuracion(self) -> None:
         """Muestra la configuración actual de autocuración."""

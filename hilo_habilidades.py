@@ -87,8 +87,10 @@ class HiloHabilidades:
                 time.sleep(0.1)
                 continue
             
-            tipo_actual = estado.tipo
-            nombre_coincidente = estado.nombre_coincidente
+            # Obtener toda la información una vez por ciclo
+            info = estado.obtener_info()
+            tipo_actual = info['tipo']
+            nombre_coincidente = info['nombre_coincidente']
             
             # Solo actuar si el objetivo es MOB o DROP Y tiene nombre coincidente válido
             # Esto evita atacar mobs que no están en la lista

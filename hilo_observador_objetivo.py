@@ -58,8 +58,10 @@ class HiloObservadorObjetivo:
                 time.sleep(0.1)
                 continue
             
-            tipo_actual = estado.tipo
-            tiempo_en_estado = estado.tiempo_en_estado_actual
+            # Obtener toda la información una vez por ciclo
+            info = estado.obtener_info()
+            tipo_actual = info['tipo']
+            tiempo_en_estado = info['tiempo_en_estado']
             
             if tipo_actual == TipoObjetivo.NULO:
                 # Sin objetivo -> presionar E

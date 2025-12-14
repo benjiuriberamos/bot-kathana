@@ -59,7 +59,9 @@ class HiloMobTrabado:
     # Lógica de escape
     # ------------------------------
     def _ejecutar_escape(self) -> None:
-        nombre_mob = estado.nombre_coincidente
+        # Obtener nombre una vez al inicio
+        info = estado.obtener_info()
+        nombre_mob = info['nombre_coincidente']
         puntos = ESCAPE_MOB["puntos_clic"]
         punto = puntos[self._escape_punto_actual]
         click_x = punto["x"]
@@ -117,11 +119,13 @@ class HiloMobTrabado:
         )
 
     def _verificar_mob_trabado(self) -> bool:
-        if estado.tipo != TipoObjetivo.MOB:
+        # Obtener información una vez
+        info = estado.obtener_info()
+        if info['tipo'] != TipoObjetivo.MOB:
             return False
 
-        nombre_actual = estado.nombre_coincidente
-        tiempo_en_estado = estado.tiempo_en_estado_actual
+        nombre_actual = info['nombre_coincidente']
+        tiempo_en_estado = info['tiempo_en_estado']
 
         if self._escape_ejecutado_para_mob == nombre_actual:
             return False
@@ -151,16 +155,19 @@ class HiloMobTrabado:
                 continue
 
             try:
-                if self._verificar_mob_trabado() and not estado.ejecutando_loot:
+                # Obtener información una vez por ciclo
+                info = estado.obtener_info()
+                
+                if self._verificar_mob_trabado() and not info['ejecutando_loot']:
                     estado.pausar_todos_los_hilos_excepto('mob_trabado')
                     self._ejecutar_escape()
                     estado.pausar_todos_los_hilos_excepto('observador_objetivo')
                 
-                nombre_actual = estado.nombre_coincidente
+                nombre_actual = info['nombre_coincidente']
                 tiempo_escape = ESCAPE_BY_MOB.get(nombre_actual, ESCAPE_MOB["timeout_mob"])
-                if estado.tiempo_en_estado_actual >= tiempo_escape + ESCAPE_MOB["duracion_total"] + 1:
+                if info['tiempo_en_estado'] >= tiempo_escape + ESCAPE_MOB["duracion_total"] + 1:
                     estado.resetear_timestamp()
-                    print(f"hilo de mob trabado activo por {estado.tiempo_en_estado_actual} segundos    ")
+                    print(f"hilo de mob trabado activo por {info['tiempo_en_estado']:.1f} segundos    ")
                 
             except Exception as e:
                 print(f"[ESCAPE] Error: {e}")

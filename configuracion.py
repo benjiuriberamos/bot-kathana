@@ -60,9 +60,9 @@ MOBS_OBJETIVO = [
     # "Srbinda (21)",
     # "Srbinda Satvan (23)",
     # "Saraa Vrca (17)",
-    # "Ulkamukha (21)",
-    # "Ulkamukha Caura (23)",
-    # "Ulkamukha Satvan (25)",
+    "Ulkamukha (21)",
+    "Ulkamukha Caura (23)",
+    "Ulkamukha Satvan (25)",
     "Ananga (25)",
     "Visa Curni (27)",
     # "Ugra Ulkamukha Satvan (32)",
@@ -106,12 +106,12 @@ LOOT_DROP = {
 HABILIDADES = {
     '1': {'active': False, 'time': 0.2},   # Habilidad 1
     '2': {'active': True,  'time': 0.2},   # Habilidad 2
-    '3': {'active': True,  'time': 0.2},   # Habilidad 3
+    '3': {'active': False,  'time': 0.2},   # Habilidad 3
     '4': {'active': True,  'time': 0.2},   # Habilidad 4
-    '5': {'active': True,  'time': 2.2},  # Habilidad 5
+    '5': {'active': False,  'time': 2.2},  # Habilidad 5
     '6': {'active': True,  'time': 60.0},  # Habilidad 6
-    '7': {'active': False,  'time': 15.0},   # Habilidad 7
-    '8': {'active': False, 'time': 40.0},   # Habilidad 8
+    '7': {'active': True,  'time': 15.0},   # Habilidad 7
+    '8': {'active': True, 'time': 40.0},   # Habilidad 8
     'F': {'active': False,  'time': 1.0},   # Tecla F
     'R': {'active': False,  'time': 0.5},   # Tecla F
     # 'S': {'active': True,  'time': 10.0},  # Tecla S
@@ -129,8 +129,8 @@ AUTOCURACION = {
         'intervalo_sin': 0.5,    # Intervalo cuando no hay vida (segundos)
     },
     'mana': {
-        'x': 75,                 # Posición X de la barra de maná
-        'y': 84,                 # Posición Y de la barra de maná
+        'x': 45,                 # Posición X de la barra de maná
+        'y': 80,                 # Posición Y de la barra de maná
         'tecla': '9',            # Tecla para restaurar maná
         'intervalo_con': 1.0,    # Intervalo cuando hay maná (segundos)
         'intervalo_sin': 0.5,    # Intervalo cuando no hay maná (segundos)
