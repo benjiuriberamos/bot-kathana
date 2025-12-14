@@ -94,7 +94,7 @@ class HiloDetectorOCR:
     def _extraer_texto(self, imagen: Image.Image) -> str:
         """Usa OCR para extraer el texto de la imagen."""
         imagen_procesada = self._procesar_imagen_para_ocr(imagen)
-        config_tesseract = '--psm 6 --oem 3'
+        config_tesseract = '--psm 6 --oem 3 -l eng'
         texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
         return texto.strip()
     
@@ -191,6 +191,7 @@ class HiloDetectorOCR:
                 
                 # 3. Extraer texto con OCR
                 texto = self._extraer_texto(captura)
+                print("texto escaneado: ", texto)
                 
                 # 4. Obtener primera línea (nombre del objetivo)
                 lineas = texto.split('\n')
