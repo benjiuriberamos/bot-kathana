@@ -1,0 +1,137 @@
+{
+    "GAME_WINDOW_TITLE": "Kathana - The Coming of the Dark Ages",
+    "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    "OCR_REGION": {
+        "left_offset": 5,
+        "top_offset": 90,
+        "width": 150,
+        "height": 15
+    },
+    "UMBRAL_SIMILITUD": 0.8,
+    "MOBS_OBJETIVO": [
+        "Aganna Tara (39)",
+        "Pizza Aganna (39)",
+        "Kaulitara (41)",
+        "Zinkiu (53)",
+        "Zinkiu Gosu (58)",
+        "Mangrian (50)",
+        "Kyoin (48)",
+        "Ananga (35)",
+        "Zaku (45)",
+        "Zaku Gosu (47)",
+        "Tarantula (30)",
+        "Ulkamukha (21)",
+        "Ulkamukha Caura (23)",
+        "Ulkamukha Satvan (25)",
+        "Ananga (25)",
+        "Visa Curni (27)",
+        "Zinmmon (51)",
+        "Zinmmon Gosu (55)",
+        "Zinku Gosu (55)"
+    ],
+    "DROP_ITEMS_OBJETIVO": [],
+    "LOOT_DROP": {
+        "repeticiones_f": 2,
+        "intervalo_f": 0.5
+    },
+    "HABILIDADES": {
+        "1": {
+            "active": false,
+            "time": 0.2
+        },
+        "2": {
+            "active": true,
+            "time": 0.2
+        },
+        "3": {
+            "active": true,
+            "time": 0.2
+        },
+        "4": {
+            "active": false,
+            "time": 0.2
+        },
+        "5": {
+            "active": true,
+            "time": 0.2
+        },
+        "6": {
+            "active": true,
+            "time": 60.0
+        },
+        "7": {
+            "active": false,
+            "time": 15.0
+        },
+        "8": {
+            "active": false,
+            "time": 40.0
+        },
+        "F": {
+            "active": false,
+            "time": 1.0
+        },
+        "R": {
+            "active": true,
+            "time": 0.5
+        }
+    },
+    "AUTOCURACION": {
+        "vida": {
+            "x": 140,
+            "y": 62,
+            "tecla": [
+                "0",
+                "7",
+                "4"
+            ],
+            "intervalo_con": 1.0,
+            "intervalo_sin": 0.5
+        },
+        "mana": {
+            "x": 45,
+            "y": 80,
+            "tecla": "9",
+            "intervalo_con": 1.0,
+            "intervalo_sin": 0.5
+        }
+    },
+    "OBSERVADOR_OBJETIVO": {
+        "timeout_drop": 3.0,
+        "intervalo_revision": 0.1
+    },
+    "ESCAPE_MOB": {
+        "pjname": "Toronja",
+        "timeout_mob": 15.0,
+        "punto_click_primero": {
+            "x": 405,
+            "y": 360
+        },
+        "puntos_clic": [
+            {
+                "x": 790,
+                "y": 60
+            },
+            {
+                "x": 790,
+                "y": 500
+            },
+            {
+                "x": 220,
+                "y": 40
+            },
+            {
+                "x": 40,
+                "y": 450
+            }
+        ],
+        "veces": 2,
+        "duracion_total": 1.0
+    },
+    "ESCAPE_BY_MOB": {
+        "Zinkiu (53)": 20.0,
+        "Zinkiu Gosu (58)": 17.0,
+        "Mangrian (50)": 15.0,
+        "Kyoin (48)": 15.0
+    }
+}

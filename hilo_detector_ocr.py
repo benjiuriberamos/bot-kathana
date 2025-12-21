@@ -9,9 +9,10 @@ También ejecuta:
 import ctypes
 import time
 import threading
-from PIL import Image
 import mss
 import pytesseract
+import cv2
+import numpy as np
 from difflib import SequenceMatcher
 
 from estado_objetivo import estado, TipoObjetivo
@@ -63,10 +64,10 @@ class HiloDetectorOCR:
         self.user32.GetWindowRect(self.hwnd, ctypes.byref(rect))
         return rect
     
-    def _capturar_region_objetivo(self) -> Image.Image:
+    def _capturar_region_objetivo(self) -> np.ndarray:
         """
         Captura la región de la ventana donde aparece la información del objetivo.
-        Usa mss para compatibilidad con juegos DirectX/OpenGL.
+        Devuelve una imagen en formato numpy (OpenCV).
         """
         rect = self._obtener_rect_ventana()
         
@@ -79,22 +80,44 @@ class HiloDetectorOCR:
         
         with mss.mss() as sct:
             screenshot = sct.grab(region)
-            img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
+            # Convertir directamente a array numpy (BGRA)
+            img = np.array(screenshot)
+            
+            # [DEBUG] Guardar la imagen capturada cruda
+            # cv2.imwrite("debug_captura_raw.png", img)
         
         return img
     
-    def _procesar_imagen_para_ocr(self, imagen: Image.Image) -> Image.Image:
-        """Preprocesa la imagen para mejorar la detección OCR."""
-        # Convertir a escala de grises
-        imagen_gris = imagen.convert('L')
-        # Binarización para mejor OCR
-        imagen_binaria = imagen_gris.point(lambda x: 255 if x > 100 else 0)
-        return imagen_binaria
+    def _procesar_imagen_para_ocr(self, imagen: np.ndarray) -> np.ndarray:
+        """
+        Preprocesa la imagen con OpenCV para mejorar la detección OCR.
+        Pipeline: Escala de grises -> Resize 2x -> Binarización.
+        """
+        # 1. Convertir BGRA a Escala de Grises
+        gris = cv2.cvtColor(imagen, cv2.COLOR_BGRA2GRAY)
+        
+        # 2. Escalar 2x (Tesseract funciona mejor con texto más grande)
+        # Usamos interpolación CUBIC para mantener bordes suaves pero definidos
+        escalada = cv2.resize(gris, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+        
+        # 3. Binarización (Texto blanco sobre fondo negro)
+        # Aplicamos un umbral fijo. Ajustar '150' si el texto no se detecta bien.
+        # Todo lo que sea más brillante que 150 se vuelve blanco (255), lo demás negro (0).
+        _, binaria = cv2.threshold(escalada, 150, 255, cv2.THRESH_BINARY)
+        
+        return binaria
     
-    def _extraer_texto(self, imagen: Image.Image) -> str:
-        """Usa OCR para extraer el texto de la imagen."""
+    def _extraer_texto(self, imagen: np.ndarray) -> str:
+        """Usa OCR para extraer el texto de la imagen procesada."""
         imagen_procesada = self._procesar_imagen_para_ocr(imagen)
-        config_tesseract = '--psm 6 --oem 3 -l eng'
+        
+        # [DEBUG] Guardar imagen procesada (lo que ve el OCR)
+        # cv2.imwrite("debug_captura_proc.png", imagen_procesada)
+        
+        # Configuración optimizada:
+        # --psm 7: Tratar imagen como una sola línea de texto.
+        # -c tessedit_char_whitelist: Solo permitir letras, números, espacios y paréntesis.
+        config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ()" -l eng'
         texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
         return texto.strip()
     
@@ -184,8 +207,6 @@ class HiloDetectorOCR:
                 continue
             
             try:
-                
-                
                 # 2. Capturar la región del objetivo
                 captura = self._capturar_region_objetivo()
                 
@@ -200,7 +221,6 @@ class HiloDetectorOCR:
                 # 5. Clasificar y actualizar estado
                 self._clasificar_objetivo(nombre)
 
-                
             except Exception as e:
                 print(f"[DETECTOR OCR] Error: {e}")
             

@@ -15,9 +15,9 @@ TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 # REGIÓN DE CAPTURA PARA OCR (relativa a la ventana del juego)
 # ============================================================
 OCR_REGION = {
-    "left_offset": 5,     # Margen izquierdo desde la ventana
+    "left_offset": 10,     # Margen izquierdo desde la ventana
     "top_offset": 90,     # Margen superior desde la ventana
-    "width": 150,         # Ancho de la región a capturar
+    "width": 160,       # Ancho de la región a capturar
     "height": 15          # Alto de la región a capturar
 }
 
@@ -54,7 +54,7 @@ MOBS_OBJETIVO = [
     "Zaku (45)",
     "Zaku Gosu (47)",
     # "Varaha (15)",
-    # "Tarantula (30)",
+    "Tarantula (30)",
     # "Heruka (31)",
     # "Aprah Varaha Raja (15)",
     # "Srbinda (21)",
@@ -94,7 +94,7 @@ DROP_ITEMS_OBJETIVO = [
 # CONFIGURACIÓN DE LOOT/DROP
 # ============================================================
 LOOT_DROP = {
-    'repeticiones_f': 0,    # Veces que se presionará la tecla F
+    'repeticiones_f': 2,    # Veces que se presionará la tecla F
     'intervalo_f': 0.5,     # Segundos de espera entre cada pulsación
 }
 
@@ -106,14 +106,14 @@ LOOT_DROP = {
 HABILIDADES = {
     '1': {'active': False, 'time': 0.2},   # Habilidad 1
     '2': {'active': True,  'time': 0.2},   # Habilidad 2
-    '3': {'active': False,  'time': 0.2},   # Habilidad 3
-    '4': {'active': True,  'time': 0.2},   # Habilidad 4
-    '5': {'active': False,  'time': 2.2},  # Habilidad 5
+    '3': {'active': True,  'time': 0.2},   # Habilidad 3
+    '4': {'active': False,  'time': 0.2},   # Habilidad 4
+    '5': {'active': True,  'time': 2.2},  # Habilidad 5
     '6': {'active': True,  'time': 60.0},  # Habilidad 6
-    '7': {'active': True,  'time': 15.0},   # Habilidad 7
-    '8': {'active': True, 'time': 40.0},   # Habilidad 8
+    '7': {'active': False,  'time': 15.0},   # Habilidad 7
+    '8': {'active': False, 'time': 40.0},   # Habilidad 8
     'F': {'active': False,  'time': 1.0},   # Tecla F
-    'R': {'active': False,  'time': 0.5},   # Tecla F
+    'R': {'active': True,  'time': 0.5},   # Tecla F
     # 'S': {'active': True,  'time': 10.0},  # Tecla S
 }
 
@@ -122,7 +122,7 @@ HABILIDADES = {
 # ============================================================
 AUTOCURACION = {
     'vida': {
-        'x': 128,                # Posición X de la barra de vida
+        'x': 110,                # Posición X de la barra de vida
         'y': 62,                 # Posición Y de la barra de vida
         'tecla': ['0','7', '4'],            # Tecla para curar vida
         'intervalo_con': 1.0,    # Intervalo cuando hay vida (segundos)
@@ -152,23 +152,23 @@ OBSERVADOR_OBJETIVO = {
 # ============================================================
 ESCAPE_MOB = {
     'pjname': "Toronja",
-    'timeout_mob': 20.0,         # Segundos antes de considerar que el mob está trabado
-    'punto_click_primero': {'x': 405, 'y': 360},
+    'timeout_mob': 15.0,         # Segundos antes de considerar que el mob está trabado
+    'punto_click_primero': {'x': 405, 'y': 360}, # el punto del personaje
     'puntos_clic': [
         {'x': 790, 'y': 60},     # Punto 1 - Primera vez que se trabe
         {'x': 790, 'y': 500},    # Punto 4 - Segunda vez que se trabe (cambia estas coordenadas)
         {'x': 220, 'y': 40},    # Punto 2 - Segunda vez que se trabe (cambia estas coordenadas)
         {'x': 40, 'y': 450},     # Punto 3 - Segunda vez que se trabe (cambia estas coordenadas)
     ],
-    'veces': 3,                  # Veces que se hace clic en el punto
-    'duracion_total': 3.0,       # Duración total de la secuencia de escape (segundos)
+    'veces': 1,                  # Veces que se hace clic en el punto
+    'duracion_total': 1.0,       # Duración total de la secuencia de escape (segundos)
 }
 
 ESCAPE_BY_MOB = {
-    # "Zinkiu Gosu (58)": 25.0,
-    # "Zinkiu (53)": 20.0,
-    # "Mangrian (50)": 15.0,
-    # "Kyoin (48)": 10.0,
+    "Zinkiu Gosu (58)": 25.0,
+    "Zinkiu (53)": 17.0,
+    "Mangrian (50)": 15.0,
+    "Kyoin (48)": 15.0,
     # "Borangi (54)": 10.0,
     # "Byokbo (56)": 10.0,
     # "Ananga (35)": 10.0,
@@ -187,4 +187,19 @@ VK_CODES = {
     '5': 0x35, '6': 0x36, '7': 0x37, '8': 0x38, '9': 0x39,
     'E': 0x45, 'R': 0x52, 'F': 0x46, 'S': 0x53,
 }
+
+# ============================================================
+# CARGA DE CONFIGURACIÓN DESDE JSON (si existe)
+# ============================================================
+try:
+    from config_manager import cargar_configuracion, aplicar_configuracion_a_modulo
+    config_json = cargar_configuracion()
+    if config_json:
+        aplicar_configuracion_a_modulo(config_json)
+except ImportError:
+    # Si config_manager no está disponible, usar valores por defecto
+    pass
+except Exception as e:
+    # Si hay error al cargar, usar valores por defecto
+    print(f"Advertencia: No se pudo cargar configuración desde JSON: {e}")
 

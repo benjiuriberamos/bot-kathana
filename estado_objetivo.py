@@ -1,12 +1,13 @@
 """
 Módulo de estado compartido para el objetivo.
-Singleton thread-safe que mantiene el tipo de objetivo actual.
+Process-safe que mantiene el tipo de objetivo actual usando multiprocessing.
 
 Tipos de objetivo:
 - NULO: No hay objetivo (texto OCR vacío)
 - MOB: Objetivo es un mob de la lista
 - DROP: Objetivo es un item dropeado
 """
+import multiprocessing
 import threading
 import time
 from enum import Enum
@@ -21,107 +22,119 @@ class TipoObjetivo(Enum):
 
 class EstadoObjetivo:
     """
-    Clase singleton para manejar el estado del objetivo.
-    Thread-safe para uso en paralelo entre múltiples hilos.
+    Clase para manejar el estado del objetivo.
+    Process-safe para uso en paralelo entre múltiples procesos usando multiprocessing.Manager.
     """
     _instance = None
-    _lock = threading.Lock()
+    _init_lock = None
+    _manager = None
     
     def __new__(cls):
+        # Usar threading.Lock para el singleton (solo se crea una vez en el proceso principal)
+        import threading as thread_module
+        if not hasattr(cls, '_init_lock') or cls._init_lock is None:
+            cls._init_lock = thread_module.Lock()
+        
         if cls._instance is None:
-            with cls._lock:
+            with cls._init_lock:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._instance._inicializar()
         return cls._instance
     
     def _inicializar(self):
-        """Inicializa el estado."""
-        self._tipo = TipoObjetivo.NULO
-        self._tipo_anterior = TipoObjetivo.NULO
-        self._nombre = None
-        self._nombre_coincidente = None
-        self._similitud = 0.0
-        self._timestamp_cambio = time.time()
-        # Usar un solo RLock para evitar deadlocks y permitir reentrancia
-        self._lock = threading.RLock()
+        """Inicializa el estado usando multiprocessing.Manager."""
+        # Crear manager si no existe (solo en el proceso principal)
+        if multiprocessing.current_process().name == 'MainProcess':
+            if EstadoObjetivo._manager is None:
+                EstadoObjetivo._manager = multiprocessing.Manager()
+        else:
+            return
         
-        # Control de hilos - por defecto todos activos
-        self._hilos_activos = {
+        # Usar un diccionario compartido para todo el estado (más eficiente para strings)
+        self._estado = EstadoObjetivo._manager.dict({
+            'tipo': TipoObjetivo.NULO.value,
+            'tipo_anterior': TipoObjetivo.NULO.value,
+            'nombre': '',
+            'nombre_coincidente': '',
+            'similitud': 0.0,
+            'timestamp_cambio': time.time(),
+            'ejecutando_accion_loot': False,
+        })
+        
+        # Control de procesos - por defecto todos activos
+        self._procesos_activos = EstadoObjetivo._manager.dict({
             'autocuracion': True, # Siempre verdadero
             'detector_ocr': True, # Siempre verdadero
             'habilidades': False,
             'observador_objetivo': True,
             'mob_trabado': False,
             'recoger_drop': False,
-        }
+        })
 
-        self._hilos_activos_default = ['autocuracion','detector_ocr']
+        self._procesos_activos_default = ['autocuracion','detector_ocr']
         
-        # Flag para indicar que se está ejecutando acción de loot
-        self._ejecutando_accion_loot = False
+        # Lock para sincronización (ahora es multiprocessing.Lock)
+        self._lock = multiprocessing.Lock()
     
     # ============================================================
-    # Control de hilos
+    # Control de procesos
     # ============================================================
     
     def pausar_todos_los_hilos_excepto(self, nombre_hilo: str):
-        """Pausa todos los hilos excepto el hilo especificado."""
+        """Pausa todos los procesos excepto el proceso especificado."""
         with self._lock:
-            # Primero activar el hilo especificado
-            if nombre_hilo in self._hilos_activos:
-                self._hilos_activos[nombre_hilo] = True
+            # Primero activar el proceso especificado
+            if nombre_hilo in self._procesos_activos:
+                self._procesos_activos[nombre_hilo] = True
             # Luego pausar los demás (excepto los que son default)
-            for hilo in self._hilos_activos:
-                if hilo != nombre_hilo and hilo not in self._hilos_activos_default:
-                    self._hilos_activos[hilo] = False
-            print(f"[ESTADO] ⏸️  Todos los hilos PAUSADOS excepto {nombre_hilo}")
+            for proceso in self._procesos_activos:
+                if proceso != nombre_hilo and proceso not in self._procesos_activos_default:
+                    self._procesos_activos[proceso] = False
+            print(f"[ESTADO] ⏸️  Todos los procesos PAUSADOS excepto {nombre_hilo}")
     
     def activar_hilo(self, nombre_hilo: str):
-        """Activa un hilo."""
+        """Activa un proceso."""
         with self._lock:
-            self._hilos_activos[nombre_hilo] = True
-            print(f"[ESTADO] ▶️  Hilo {nombre_hilo} ACTIVADO")
+            self._procesos_activos[nombre_hilo] = True
+            print(f"[ESTADO] ▶️  Proceso {nombre_hilo} ACTIVADO")
 
     def hilo_activo(self, nombre_hilo: str) -> bool:
-        """Verifica si un hilo está activo."""
+        """Verifica si un proceso está activo."""
         with self._lock:
-            return self._hilos_activos.get(nombre_hilo, True)
+            return self._procesos_activos.get(nombre_hilo, True)
     
     def pausar_todos_los_hilos(self):
-        """Pausa todos los hilos."""
+        """Pausa todos los procesos."""
         with self._lock:
-            for hilo in self._hilos_activos:
-                self._hilos_activos[hilo] = False
-            print("[ESTADO] ⏸️  Todos los hilos PAUSADOS")
+            for proceso in self._procesos_activos:
+                self._procesos_activos[proceso] = False
+            print("[ESTADO] ⏸️  Todos los procesos PAUSADOS")
     
     def reactivar_todos_los_hilos(self):
-        """Reactiva todos los hilos."""
+        """Reactiva todos los procesos."""
         with self._lock:
-            for hilo in self._hilos_activos:
-                self._hilos_activos[hilo] = True
-            print("[ESTADO] ▶️  Todos los hilos REACTIVADOS")
+            for proceso in self._procesos_activos:
+                self._procesos_activos[proceso] = True
+            print("[ESTADO] ▶️  Todos los procesos REACTIVADOS")
     
     @property
     def ejecutando_loot(self) -> bool:
         """Retorna True si se está ejecutando la acción de loot."""
-        with self._lock:
-            return self._ejecutando_accion_loot
+        return self._estado['ejecutando_accion_loot']
     
     def iniciar_accion_loot(self):
         """Marca que se está ejecutando la acción de loot."""
-        with self._lock:
-            self._ejecutando_accion_loot = True
+        self._estado['ejecutando_accion_loot'] = True
     
     def finalizar_accion_loot(self):
         """Marca que terminó la acción de loot."""
-        with self._lock:
-            self._ejecutando_accion_loot = False
+        self._estado['ejecutando_accion_loot'] = False
     
     def resetear_timestamp(self):
         """Resetea el timestamp del estado actual (reinicia el contador de tiempo)."""
         with self._lock:
-            self._timestamp_cambio = time.time()
+            self._estado['timestamp_cambio'] = time.time()
             print("[ESTADO] ⏱️ Timestamp reseteado - Contador vuelve a 0")
     
     # ============================================================
@@ -131,44 +144,37 @@ class EstadoObjetivo:
     @property
     def tipo(self) -> TipoObjetivo:
         """Retorna el tipo de objetivo actual."""
-        with self._lock:
-            return self._tipo
+        return TipoObjetivo(self._estado['tipo'])
     
     @property
     def tipo_anterior(self) -> TipoObjetivo:
         """Retorna el tipo de objetivo anterior."""
-        with self._lock:
-            return self._tipo_anterior
+        return TipoObjetivo(self._estado['tipo_anterior'])
     
     @property
     def nombre(self) -> str:
         """Retorna el nombre detectado por OCR."""
-        with self._lock:
-            return self._nombre
+        return self._estado['nombre']
     
     @property
     def nombre_coincidente(self) -> str:
         """Retorna el nombre coincidente de la lista (mob o drop)."""
-        with self._lock:
-            return self._nombre_coincidente
+        return self._estado['nombre_coincidente']
     
     @property
     def similitud(self) -> float:
         """Retorna la similitud del match."""
-        with self._lock:
-            return self._similitud
+        return self._estado['similitud']
     
     @property
     def timestamp_cambio(self) -> float:
         """Retorna el timestamp del último cambio de estado."""
-        with self._lock:
-            return self._timestamp_cambio
+        return self._estado['timestamp_cambio']
     
     @property
     def tiempo_en_estado_actual(self) -> float:
         """Retorna cuántos segundos lleva en el estado actual."""
-        with self._lock:
-            return time.time() - self._timestamp_cambio
+        return time.time() - self._estado['timestamp_cambio']
     
     @property
     def es_nulo(self) -> bool:
@@ -197,16 +203,16 @@ class EstadoObjetivo:
             True si hubo transición MOB→NULO (mob murió)
         """
         with self._lock:
-            transicion_mob_a_nulo = (self._tipo == TipoObjetivo.MOB)
+            transicion_mob_a_nulo = (self._estado['tipo'] == TipoObjetivo.MOB.value)
             
-            if self._tipo != TipoObjetivo.NULO:
-                self._tipo_anterior = self._tipo
-                self._timestamp_cambio = time.time()
+            if self._estado['tipo'] != TipoObjetivo.NULO.value:
+                self._estado['tipo_anterior'] = self._estado['tipo']
+                self._estado['timestamp_cambio'] = time.time()
             
-            self._tipo = TipoObjetivo.NULO
-            self._nombre = None
-            self._nombre_coincidente = None
-            self._similitud = 0.0
+            self._estado['tipo'] = TipoObjetivo.NULO.value
+            self._estado['nombre'] = ''
+            self._estado['nombre_coincidente'] = ''
+            self._estado['similitud'] = 0.0
         
         # Mover print fuera del lock para reducir tiempo de retención
         if transicion_mob_a_nulo:
@@ -226,14 +232,14 @@ class EstadoObjetivo:
             similitud: Porcentaje de similitud (0-1)
         """
         with self._lock:
-            cambio = self._tipo != TipoObjetivo.MOB or self._nombre_coincidente != nombre_coincidente
+            cambio = self._estado['tipo'] != TipoObjetivo.MOB.value or self._estado['nombre_coincidente'] != nombre_coincidente
             if cambio:
-                self._tipo_anterior = self._tipo
-                self._timestamp_cambio = time.time()
-            self._tipo = TipoObjetivo.MOB
-            self._nombre = nombre_detectado
-            self._nombre_coincidente = nombre_coincidente
-            self._similitud = similitud
+                self._estado['tipo_anterior'] = self._estado['tipo']
+                self._estado['timestamp_cambio'] = time.time()
+            self._estado['tipo'] = TipoObjetivo.MOB.value
+            self._estado['nombre'] = nombre_detectado or ''
+            self._estado['nombre_coincidente'] = nombre_coincidente or ''
+            self._estado['similitud'] = similitud
         
         # Mover print fuera del lock para reducir tiempo de retención
         if cambio:
@@ -249,14 +255,14 @@ class EstadoObjetivo:
             similitud: Porcentaje de similitud (0-1)
         """
         with self._lock:
-            cambio = self._tipo != TipoObjetivo.DROP or self._nombre_coincidente != nombre_coincidente
+            cambio = self._estado['tipo'] != TipoObjetivo.DROP.value or self._estado['nombre_coincidente'] != nombre_coincidente
             if cambio:
-                self._tipo_anterior = self._tipo
-                self._timestamp_cambio = time.time()
-            self._tipo = TipoObjetivo.DROP
-            self._nombre = nombre_detectado
-            self._nombre_coincidente = nombre_coincidente
-            self._similitud = similitud
+                self._estado['tipo_anterior'] = self._estado['tipo']
+                self._estado['timestamp_cambio'] = time.time()
+            self._estado['tipo'] = TipoObjetivo.DROP.value
+            self._estado['nombre'] = nombre_detectado or ''
+            self._estado['nombre_coincidente'] = nombre_coincidente or ''
+            self._estado['similitud'] = similitud
         
         # Mover print fuera del lock para reducir tiempo de retención
         if cambio:
@@ -269,17 +275,17 @@ class EstadoObjetivo:
         Returns:
             Diccionario con toda la información del objetivo
         """
+        # Calcular tiempo fuera del lock para minimizar tiempo de retención
+        tiempo_actual = time.time()
         with self._lock:
-            # Calcular tiempo fuera del return para minimizar tiempo en lock
-            tiempo_actual = time.time()
             return {
-                'tipo': self._tipo,
-                'tipo_anterior': self._tipo_anterior,
-                'nombre': self._nombre,
-                'nombre_coincidente': self._nombre_coincidente,
-                'similitud': self._similitud,
-                'tiempo_en_estado': tiempo_actual - self._timestamp_cambio,
-                'ejecutando_loot': self._ejecutando_accion_loot,
+                'tipo': TipoObjetivo(self._estado['tipo']),
+                'tipo_anterior': TipoObjetivo(self._estado['tipo_anterior']),
+                'nombre': self._estado['nombre'] if self._estado['nombre'] else None,
+                'nombre_coincidente': self._estado['nombre_coincidente'] if self._estado['nombre_coincidente'] else None,
+                'similitud': self._estado['similitud'],
+                'tiempo_en_estado': tiempo_actual - self._estado['timestamp_cambio'],
+                'ejecutando_loot': self._estado['ejecutando_accion_loot'],
             }
 
 
