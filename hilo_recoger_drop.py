@@ -79,6 +79,8 @@ class HiloRecogerDrop:
         # Esperar hasta ~1.s totales (0.5 + 0.5 + 0.5)
         # time.sleep(0.5)
 
+        self._presionar_tecla("R")
+
         # Reactivar todos los hilos
         estado.reactivar_todos_los_hilos()
 

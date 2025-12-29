@@ -117,7 +117,7 @@ class HiloDetectorOCR:
         # Configuración optimizada:
         # --psm 7: Tratar imagen como una sola línea de texto.
         # -c tessedit_char_whitelist: Solo permitir letras, números, espacios y paréntesis.
-        config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ()" -l eng'
+        config_tesseract = '--psm 7 --oem 3 -l eng'
         texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
         return texto.strip()
     

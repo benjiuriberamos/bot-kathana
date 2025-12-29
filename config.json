@@ -12,13 +12,9 @@
         "Aganna Tara (39)",
         "Pizza Aganna (39)",
         "Kaulitara (41)",
-        "Zinkiu (53)",
-        "Zinkiu Gosu (58)",
         "Mangrian (50)",
         "Kyoin (48)",
         "Ananga (35)",
-        "Zaku (45)",
-        "Zaku Gosu (47)",
         "Tarantula (30)",
         "Ulkamukha (21)",
         "Ulkamukha Caura (23)",
@@ -27,7 +23,14 @@
         "Visa Curni (27)",
         "Zinmmon (51)",
         "Zinmmon Gosu (55)",
-        "Zinku Gosu (55)"
+        "Sinkiu (53)",
+        "Sinkiu Gosu (58)",
+        "Nagamudra (52)",
+        "Ghorayogi (50)",
+        "Borangi (54)",
+        "Bokyo (56)",
+        "Zaku (45)",
+        "Zaku Gosu (45)"
     ],
     "DROP_ITEMS_OBJETIVO": [],
     "LOOT_DROP": {
@@ -130,8 +133,9 @@
     },
     "ESCAPE_BY_MOB": {
         "Zinkiu (53)": 20.0,
-        "Zinkiu Gosu (58)": 17.0,
+        "Zinkiu Gosu (58)": 25.0,
         "Mangrian (50)": 15.0,
-        "Kyoin (48)": 15.0
+        "Kyoin (48)": 15.0,
+        "Sinkiu Gosu (58)": 25.0
     }
 }
