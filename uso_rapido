@@ -1,0 +1,5 @@
+1. abrir terminal de esta carpeta
+
+2. Ingresar estos comandos en la terminal:
+venv\Scripts\activate
+python gui_main.py

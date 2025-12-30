@@ -30,7 +30,9 @@
         "Borangi (54)",
         "Bokyo (56)",
         "Zaku (45)",
-        "Zaku Gosu (45)"
+        "Zaku Gosu (45)",
+        "Bongbo (76)",
+        "Baoku (74)"
     ],
     "DROP_ITEMS_OBJETIVO": [],
     "LOOT_DROP": {
@@ -100,6 +102,7 @@
         }
     },
     "OBSERVADOR_OBJETIVO": {
+        "tecla_seleccionar": "E",
         "timeout_drop": 3.0,
         "intervalo_revision": 0.1
     },

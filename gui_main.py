@@ -417,21 +417,31 @@ class ObservadorTab(QWidget):
         
         obs_config = self.config.get('OBSERVADOR_OBJETIVO', {})
         
-        grid.addWidget(QLabel("Timeout DROP (segundos):"), 0, 0)
+        grid.addWidget(QLabel("Tecla para seleccionar objetivo:"), 0, 0)
+        self.tecla_seleccionar = QLineEdit(obs_config.get('tecla_seleccionar', 'E'))
+        self.tecla_seleccionar.setMaxLength(10)
+        self.tecla_seleccionar.setPlaceholderText("Ej: E, TAB, Q")
+        grid.addWidget(self.tecla_seleccionar, 0, 1)
+        
+        grid.addWidget(QLabel("Timeout DROP (segundos):"), 1, 0)
         self.timeout_drop = QDoubleSpinBox()
         self.timeout_drop.setRange(0.0, 60.0)
         self.timeout_drop.setSingleStep(0.1)
         self.timeout_drop.setDecimals(2)
         self.timeout_drop.setValue(obs_config.get('timeout_drop', 3.0))
-        grid.addWidget(self.timeout_drop, 0, 1)
+        grid.addWidget(self.timeout_drop, 1, 1)
         
-        grid.addWidget(QLabel("Intervalo de revisión (segundos):"), 1, 0)
+        grid.addWidget(QLabel("Intervalo de revisión (segundos):"), 2, 0)
         self.intervalo_revision = QDoubleSpinBox()
         self.intervalo_revision.setRange(0.0, 10.0)
         self.intervalo_revision.setSingleStep(0.01)
         self.intervalo_revision.setDecimals(3)
         self.intervalo_revision.setValue(obs_config.get('intervalo_revision', 0.1))
-        grid.addWidget(self.intervalo_revision, 1, 1)
+        grid.addWidget(self.intervalo_revision, 2, 1)
+        
+        # Nota de teclas disponibles
+        grid.addWidget(QLabel("Teclas disponibles:"), 3, 0)
+        grid.addWidget(QLabel("0-9, A-Z, TAB, SPACE, ENTER"), 3, 1)
         
         group.setLayout(grid)
         layout.addWidget(group)
@@ -442,6 +452,7 @@ class ObservadorTab(QWidget):
     def obtener_valores(self) -> dict:
         return {
             'OBSERVADOR_OBJETIVO': {
+                'tecla_seleccionar': self.tecla_seleccionar.text().upper().strip(),
                 'timeout_drop': self.timeout_drop.value(),
                 'intervalo_revision': self.intervalo_revision.value(),
             }
@@ -640,7 +651,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.bot_controller = BotController(status_callback=self.actualizar_estado)
+        
+        # Cargar configuración desde JSON y aplicarla al módulo
         self.config = obtener_configuracion_completa()
+        aplicar_configuracion_a_modulo(self.config)
+        
         self.init_ui()
         
         # Timer para actualizar estado
@@ -727,12 +742,110 @@ class MainWindow(QMainWindow):
             if guardar_configuracion(config):
                 # Aplicar al módulo de configuración
                 aplicar_configuracion_a_modulo(config)
-                QMessageBox.information(self, "Éxito", "Configuración guardada correctamente en config.json")
+                
+                # Actualizar la configuración local y recargar la interfaz
+                self.config = config
+                self.actualizar_interfaz_desde_config(config)
+                
+                QMessageBox.information(self, "Éxito", "Configuración guardada correctamente y aplicada en tiempo real")
             else:
                 QMessageBox.warning(self, "Error", "Error al guardar la configuración")
         
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al guardar: {e}")
+    
+    def actualizar_interfaz_desde_config(self, config: dict):
+        """Actualiza todos los campos de la interfaz con los valores de la configuración."""
+        # Actualizar pestaña General
+        self.tab_general.window_title.setText(config.get('GAME_WINDOW_TITLE', ''))
+        self.tab_general.tesseract_path.setText(config.get('TESSERACT_PATH', ''))
+        ocr_region = config.get('OCR_REGION', {})
+        self.tab_general.ocr_left.setValue(ocr_region.get('left_offset', 5))
+        self.tab_general.ocr_top.setValue(ocr_region.get('top_offset', 90))
+        self.tab_general.ocr_width.setValue(ocr_region.get('width', 150))
+        self.tab_general.ocr_height.setValue(ocr_region.get('height', 15))
+        self.tab_general.umbral.setValue(config.get('UMBRAL_SIMILITUD', 0.70))
+        
+        # Actualizar pestaña Mobs
+        self.tab_mobs.lista.clear()
+        for mob in config.get('MOBS_OBJETIVO', []):
+            if mob:
+                self.tab_mobs.lista.addItem(mob)
+        
+        # Actualizar pestaña Items
+        self.tab_items.lista.clear()
+        for item in config.get('DROP_ITEMS_OBJETIVO', []):
+            if item:
+                self.tab_items.lista.addItem(item)
+        
+        # Actualizar pestaña Loot
+        loot_config = config.get('LOOT_DROP', {})
+        self.tab_loot.repeticiones.setValue(loot_config.get('repeticiones_f', 1))
+        self.tab_loot.intervalo.setValue(loot_config.get('intervalo_f', 0.5))
+        
+        # Actualizar pestaña Habilidades
+        habilidades = config.get('HABILIDADES', {})
+        self.tab_habilidades.tabla.setRowCount(len(habilidades))
+        row = 0
+        for tecla, hab_config in habilidades.items():
+            self.tab_habilidades.tabla.setItem(row, 0, QTableWidgetItem(tecla))
+            checkbox = QCheckBox()
+            checkbox.setChecked(hab_config.get('active', False))
+            self.tab_habilidades.tabla.setCellWidget(row, 1, checkbox)
+            time_item = QTableWidgetItem(str(hab_config.get('time', 0.0)))
+            self.tab_habilidades.tabla.setItem(row, 2, time_item)
+            row += 1
+        
+        # Actualizar pestaña Autocuración
+        autocuracion = config.get('AUTOCURACION', {})
+        vida_config = autocuracion.get('vida', {})
+        self.tab_autocuracion.vida_x.setValue(vida_config.get('x', 128))
+        self.tab_autocuracion.vida_y.setValue(vida_config.get('y', 62))
+        teclas_vida = vida_config.get('tecla', [])
+        if isinstance(teclas_vida, list):
+            teclas_str = ','.join(teclas_vida)
+        else:
+            teclas_str = str(teclas_vida)
+        self.tab_autocuracion.vida_teclas.setText(teclas_str)
+        self.tab_autocuracion.vida_intervalo_con.setValue(vida_config.get('intervalo_con', 1.0))
+        self.tab_autocuracion.vida_intervalo_sin.setValue(vida_config.get('intervalo_sin', 0.5))
+        
+        mana_config = autocuracion.get('mana', {})
+        self.tab_autocuracion.mana_x.setValue(mana_config.get('x', 45))
+        self.tab_autocuracion.mana_y.setValue(mana_config.get('y', 80))
+        self.tab_autocuracion.mana_tecla.setText(mana_config.get('tecla', '9'))
+        self.tab_autocuracion.mana_intervalo_con.setValue(mana_config.get('intervalo_con', 1.0))
+        self.tab_autocuracion.mana_intervalo_sin.setValue(mana_config.get('intervalo_sin', 0.5))
+        
+        # Actualizar pestaña Observador
+        obs_config = config.get('OBSERVADOR_OBJETIVO', {})
+        self.tab_observador.tecla_seleccionar.setText(obs_config.get('tecla_seleccionar', 'E'))
+        self.tab_observador.timeout_drop.setValue(obs_config.get('timeout_drop', 3.0))
+        self.tab_observador.intervalo_revision.setValue(obs_config.get('intervalo_revision', 0.1))
+        
+        # Actualizar pestaña Escape
+        escape_mob = config.get('ESCAPE_MOB', {})
+        self.tab_escape.pjname.setText(escape_mob.get('pjname', ''))
+        self.tab_escape.timeout_mob.setValue(escape_mob.get('timeout_mob', 15.0))
+        punto_primero = escape_mob.get('punto_click_primero', {})
+        self.tab_escape.punto_primero_x.setValue(punto_primero.get('x', 405))
+        self.tab_escape.punto_primero_y.setValue(punto_primero.get('y', 360))
+        self.tab_escape.veces.setValue(escape_mob.get('veces', 1))
+        self.tab_escape.duracion_total.setValue(escape_mob.get('duracion_total', 1.0))
+        
+        self.tab_escape.lista_puntos.clear()
+        puntos = escape_mob.get('puntos_clic', [])
+        for punto in puntos:
+            texto = f"X: {punto.get('x', 0)}, Y: {punto.get('y', 0)}"
+            self.tab_escape.lista_puntos.addItem(texto)
+        
+        escape_by_mob = config.get('ESCAPE_BY_MOB', {})
+        self.tab_escape.tabla_timeouts.setRowCount(len(escape_by_mob))
+        row = 0
+        for mob, timeout in escape_by_mob.items():
+            self.tab_escape.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
+            self.tab_escape.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
+            row += 1
     
     def obtener_configuracion_desde_interfaz(self) -> dict:
         """Recopila la configuración actual desde todas las pestañas de la interfaz."""
@@ -769,10 +882,8 @@ class MainWindow(QMainWindow):
                 # Aplicar directamente al módulo de configuración (sin guardar en JSON)
                 aplicar_configuracion_a_modulo(config)
                 
-                # Recargar módulo de configuración para asegurar que use los valores actualizados
-                import importlib
-                import configuracion
-                importlib.reload(configuracion)
+                # Actualizar configuración local
+                self.config = config
                 
                 # Iniciar el bot con los valores de la interfaz
                 exito, mensaje = self.bot_controller.iniciar()

@@ -198,10 +198,12 @@ class HiloAutocuracion:
     def _ciclo_vida(self) -> None:
         """Ciclo de monitoreo de vida."""
         print("[AUTOCURACIÓN] Hilo de vida iniciado")
-        config = AUTOCURACION['vida']
         contador = 0
         
         while self.ejecutando:
+            # Leer configuración dinámicamente desde el módulo
+            config = AUTOCURACION['vida']
+            
             # Verificar si este hilo está activo
             if not estado.hilo_activo('autocuracion'):
                 time.sleep(0.1)
@@ -227,10 +229,12 @@ class HiloAutocuracion:
     def _ciclo_mana(self) -> None:
         """Ciclo de monitoreo de maná."""
         print("[AUTOCURACIÓN] Hilo de maná iniciado")
-        config = AUTOCURACION['mana']
         contador = 0
         
         while self.ejecutando:
+            # Leer configuración dinámicamente desde el módulo
+            config = AUTOCURACION['mana']
+            
             # Verificar si este hilo está activo
             if not estado.hilo_activo('autocuracion'):
                 time.sleep(0.1)

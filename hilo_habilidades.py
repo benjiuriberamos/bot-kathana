@@ -58,9 +58,17 @@ class HiloHabilidades:
         Returns:
             True si pasó suficiente tiempo desde el último uso
         """
-        config = HABILIDADES.get(tecla)
+        # Leer configuración dinámicamente desde el módulo
+        import configuracion
+        habilidades = configuracion.HABILIDADES
+        
+        config = habilidades.get(tecla)
         if not config or not config['active']:
             return False
+        
+        # Asegurar que la tecla existe en el diccionario de último uso
+        if tecla not in self.ultimo_uso:
+            self.ultimo_uso[tecla] = 0
         
         tiempo_actual = time.time()
         tiempo_desde_uso = tiempo_actual - self.ultimo_uso[tecla]
@@ -99,8 +107,12 @@ class HiloHabilidades:
                 if tipo_actual == TipoObjetivo.MOB:
                     self._presionar_r_atacar()
                 
+                # Leer configuración dinámicamente desde el módulo
+                import configuracion
+                habilidades = configuracion.HABILIDADES
+                
                 # Revisar cada habilidad activa
-                for tecla, config in HABILIDADES.items():
+                for tecla, config in habilidades.items():
                     if config['active'] and self._habilidad_lista(tecla):
                         self._usar_habilidad(tecla)
                         time.sleep(0.1)  # Pausa entre habilidades

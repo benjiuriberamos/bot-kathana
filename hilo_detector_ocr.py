@@ -21,8 +21,13 @@ from configuracion import (
     MOBS_OBJETIVO, DROP_ITEMS_OBJETIVO, VK_CODES
 )
 
-# Configurar Tesseract
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+# Configurar Tesseract (se actualizará dinámicamente)
+def _configurar_tesseract():
+    """Configura Tesseract con la ruta actual del módulo."""
+    import configuracion
+    pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
+
+_configurar_tesseract()
 
 # Constantes para mensajes de teclado
 WM_KEYDOWN = 0x0100
@@ -69,13 +74,17 @@ class HiloDetectorOCR:
         Captura la región de la ventana donde aparece la información del objetivo.
         Devuelve una imagen en formato numpy (OpenCV).
         """
+        # Leer configuración dinámicamente desde el módulo
+        import configuracion
+        ocr_region = configuracion.OCR_REGION
+        
         rect = self._obtener_rect_ventana()
         
         region = {
-            "left": rect.left + OCR_REGION["left_offset"],
-            "top": rect.top + OCR_REGION["top_offset"],
-            "width": OCR_REGION["width"],
-            "height": OCR_REGION["height"]
+            "left": rect.left + ocr_region["left_offset"],
+            "top": rect.top + ocr_region["top_offset"],
+            "width": ocr_region["width"],
+            "height": ocr_region["height"]
         }
         
         with mss.mss() as sct:
@@ -138,6 +147,10 @@ class HiloDetectorOCR:
         Returns:
             tuple: (nombre_encontrado, similitud) o (None, 0)
         """
+        # Leer umbral dinámicamente desde el módulo
+        import configuracion
+        umbral = configuracion.UMBRAL_SIMILITUD
+        
         if not nombre_detectado:
             return None, 0
         
@@ -151,19 +164,10 @@ class HiloDetectorOCR:
                 mejor_similitud = similitud
                 mejor_match = item
         
-        if mejor_similitud >= UMBRAL_SIMILITUD:
+        if mejor_similitud >= umbral:
             return mejor_match, mejor_similitud
         
         return None, mejor_similitud
-    
-    def _presionar_tecla(self, tecla: str) -> None:
-        """Presiona una tecla genérica."""
-        if tecla not in VK_CODES:
-            return
-        vk_code = VK_CODES[tecla]
-        self.user32.PostMessageW(self.hwnd, WM_KEYDOWN, vk_code, 0)
-        time.sleep(0.05)
-        self.user32.PostMessageW(self.hwnd, WM_KEYUP, vk_code, 0)
     
     # ============================================================
     # Clasificación de objetivo
@@ -176,19 +180,24 @@ class HiloDetectorOCR:
         Args:
             texto_detectado: Texto extraído por OCR
         """
+        # Leer listas dinámicamente desde el módulo
+        import configuracion
+        mobs_objetivo = configuracion.MOBS_OBJETIVO
+        drop_items_objetivo = configuracion.DROP_ITEMS_OBJETIVO
+        
         # Si el texto está vacío -> NULO
         if not texto_detectado or texto_detectado.strip() == "":
             estado.establecer_nulo()
             return
         
         # Buscar en la lista de mobs
-        mob_encontrado, similitud_mob = self._buscar_en_lista(texto_detectado, MOBS_OBJETIVO)
+        mob_encontrado, similitud_mob = self._buscar_en_lista(texto_detectado, mobs_objetivo)
         if mob_encontrado:
             estado.establecer_mob(texto_detectado, mob_encontrado, similitud_mob)
             return
         
         # Buscar en la lista de drops
-        drop_encontrado, similitud_drop = self._buscar_en_lista(texto_detectado, DROP_ITEMS_OBJETIVO)
+        drop_encontrado, similitud_drop = self._buscar_en_lista(texto_detectado, drop_items_objetivo)
         if drop_encontrado:
             estado.establecer_drop(texto_detectado, drop_encontrado, similitud_drop)
             return
@@ -207,6 +216,10 @@ class HiloDetectorOCR:
                 continue
             
             try:
+                # Actualizar configuración de Tesseract por si cambió
+                import configuracion
+                pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
+                
                 # 2. Capturar la región del objetivo
                 captura = self._capturar_region_objetivo()
                 

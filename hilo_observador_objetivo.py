@@ -36,23 +36,34 @@ class HiloObservadorObjetivo:
         self.hwnd = hwnd
         self.ejecutando = False
         self.thread = None
-        self.timeout_drop = OBSERVADOR_OBJETIVO['timeout_drop']
-        self.intervalo = OBSERVADOR_OBJETIVO['intervalo_revision']
+        # No copiar valores, leer dinámicamente desde el módulo
     
-    def _presionar_tecla_e(self) -> None:
-        """Presiona la tecla E para seleccionar objetivo."""
-        vk_code = VK_CODES['E']
+    def _presionar_tecla_para_seleccionar(self) -> None:
+        """Presiona la tecla configurada para seleccionar objetivo."""
+        # Leer configuración dinámicamente desde el módulo
+        import configuracion
+        tecla = configuracion.OBSERVADOR_OBJETIVO.get('tecla_seleccionar', 'E')
+        vk_codes = configuracion.VK_CODES
+        
+        if tecla not in vk_codes:
+            print(f"[OBSERVADOR] Error: Tecla '{tecla}' no encontrada en VK_CODES")
+            return
+        
+        vk_code = vk_codes[tecla]
         user32.PostMessageW(self.hwnd, WM_KEYDOWN, vk_code, 0)
         time.sleep(0.05)
         user32.PostMessageW(self.hwnd, WM_KEYUP, vk_code, 0)
-        print("[OBSERVADOR] Tecla E presionada - Seleccionando objetivo...")
+        print(f"[OBSERVADOR] Tecla {tecla} presionada - Seleccionando objetivo...")
     
     def _ciclo_observador(self) -> None:
         """Ciclo principal del observador."""
         print("[OBSERVADOR] Hilo iniciado")
-        print(f"[OBSERVADOR] Timeout para DROP: {self.timeout_drop}s")
         
         while self.ejecutando:
+            # Leer configuración dinámicamente desde el módulo
+            timeout_drop = OBSERVADOR_OBJETIVO['timeout_drop']
+            intervalo = OBSERVADOR_OBJETIVO['intervalo_revision']
+            
             # Verificar si este hilo está activo
             if not estado.hilo_activo('observador_objetivo'):
                 time.sleep(0.1)
@@ -65,7 +76,7 @@ class HiloObservadorObjetivo:
             
             if tipo_actual == TipoObjetivo.NULO:
                 # Sin objetivo -> presionar E
-                self._presionar_tecla_e()
+                self._presionar_tecla_para_seleccionar()
                 time.sleep(1.5)  # Esperar un poco antes de volver a intentar
                 
             elif tipo_actual in [TipoObjetivo.MOB, TipoObjetivo.DROP]:
@@ -76,13 +87,13 @@ class HiloObservadorObjetivo:
                 pass
                 
                 # Tenemos un drop
-                # if tiempo_en_estado >= self.timeout_drop:
+                # if tiempo_en_estado >= timeout_drop:
                 #     # Lleva más de X segundos en DROP -> presionar E
-                #     print(f"[OBSERVADOR] DROP por {tiempo_en_estado:.1f}s (> {self.timeout_drop}s) -> Presionando E")
-                #     self._presionar_tecla_e()
+                #     print(f"[OBSERVADOR] DROP por {tiempo_en_estado:.1f}s (> {timeout_drop}s) -> Presionando E")
+                #     self._presionar_tecla_para_seleccionar()
                 #     time.sleep(1.5)
             
-            time.sleep(self.intervalo)
+            time.sleep(intervalo)
         
         print("[OBSERVADOR] Hilo detenido")
     

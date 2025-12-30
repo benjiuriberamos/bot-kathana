@@ -29,7 +29,7 @@ class HiloRecogerDrop:
         self.user32 = None
         self.ejecutando = False
         self.thread = None
-        self.config_loot = LOOT_DROP
+        # No copiar valores, leer dinámicamente desde el módulo
 
     # ---------------------------------------------
     # Helpers de teclado
@@ -66,8 +66,10 @@ class HiloRecogerDrop:
         # Pausar todos los hilos
         estado.pausar_todos_los_hilos()
 
-        repeticiones = max(0, int(self.config_loot.get('repeticiones_f', 3)))
-        intervalo = float(self.config_loot.get('intervalo_f', 0.5))
+        # Leer configuración dinámicamente desde el módulo
+        config_loot = LOOT_DROP
+        repeticiones = max(0, int(config_loot.get('repeticiones_f', 3)))
+        intervalo = float(config_loot.get('intervalo_f', 0.5))
 
         # Presionar F repeticiones configuradas
         for i in range(repeticiones):

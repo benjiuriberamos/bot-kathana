@@ -59,10 +59,21 @@ class HiloMobTrabado:
     # Lógica de escape
     # ------------------------------
     def _ejecutar_escape(self) -> None:
+        # Leer configuración dinámicamente desde el módulo
+        import configuracion
+        escape_mob = configuracion.ESCAPE_MOB
+        
         # Obtener nombre una vez al inicio
         info = estado.obtener_info()
         nombre_mob = info['nombre_coincidente']
-        puntos = ESCAPE_MOB["puntos_clic"]
+        puntos = escape_mob["puntos_clic"]
+        
+        # Asegurar que el índice esté dentro del rango válido
+        if len(puntos) == 0:
+            print("[ESCAPE] Error: No hay puntos de clic configurados")
+            return
+            
+        self._escape_punto_actual = self._escape_punto_actual % len(puntos)
         punto = puntos[self._escape_punto_actual]
         click_x = punto["x"]
         click_y = punto["y"]
@@ -79,11 +90,11 @@ class HiloMobTrabado:
         estado.pausar_todos_los_hilos()
 
         # Clics
-        veces = ESCAPE_MOB["veces"]
-        duracion = ESCAPE_MOB["duracion_total"]
+        veces = escape_mob["veces"]
+        duracion = escape_mob["duracion_total"]
         intervalo = duracion / veces
 
-        punto_click_primero = ESCAPE_MOB["punto_click_primero"]
+        punto_click_primero = escape_mob["punto_click_primero"]
 
         
 
@@ -119,6 +130,11 @@ class HiloMobTrabado:
         )
 
     def _verificar_mob_trabado(self) -> bool:
+        # Leer configuración dinámicamente desde el módulo
+        import configuracion
+        escape_mob = configuracion.ESCAPE_MOB
+        escape_by_mob = configuracion.ESCAPE_BY_MOB
+        
         # Obtener información una vez
         info = estado.obtener_info()
         if info['tipo'] != TipoObjetivo.MOB:
@@ -132,7 +148,7 @@ class HiloMobTrabado:
 
         #El escape depende de con qué mob estes peleando
         #si es fuerte demora más, si es debil demora menos
-        tiempo_escape = ESCAPE_BY_MOB.get(nombre_actual, ESCAPE_MOB["timeout_mob"])
+        tiempo_escape = escape_by_mob.get(nombre_actual, escape_mob["timeout_mob"])
         
         if tiempo_en_estado >= tiempo_escape:
             self._escape_ejecutado_para_mob = nombre_actual
@@ -155,6 +171,11 @@ class HiloMobTrabado:
                 continue
 
             try:
+                # Leer configuración dinámicamente desde el módulo
+                import configuracion
+                escape_mob = configuracion.ESCAPE_MOB
+                escape_by_mob = configuracion.ESCAPE_BY_MOB
+                
                 # Obtener información una vez por ciclo
                 info = estado.obtener_info()
                 
@@ -164,8 +185,8 @@ class HiloMobTrabado:
                     estado.pausar_todos_los_hilos_excepto('observador_objetivo')
                 
                 nombre_actual = info['nombre_coincidente']
-                tiempo_escape = ESCAPE_BY_MOB.get(nombre_actual, ESCAPE_MOB["timeout_mob"])
-                if info['tiempo_en_estado'] >= tiempo_escape + ESCAPE_MOB["duracion_total"] + 1:
+                tiempo_escape = escape_by_mob.get(nombre_actual, escape_mob["timeout_mob"])
+                if info['tiempo_en_estado'] >= tiempo_escape + escape_mob["duracion_total"] + 1:
                     estado.resetear_timestamp()
                     print(f"hilo de mob trabado activo por {info['tiempo_en_estado']:.1f} segundos    ")
                 
