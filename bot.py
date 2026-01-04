@@ -18,7 +18,6 @@ from game_window import GameWindow
 from configuracion import (
     GAME_WINDOW_TITLE, 
     MOBS_OBJETIVO, 
-    DROP_ITEMS_OBJETIVO,
     HABILIDADES,
     AUTOCURACION,
     OBSERVADOR_OBJETIVO,
@@ -51,11 +50,6 @@ def mostrar_configuracion():
     print(f"\n  📋 MOBS OBJETIVO ({len(MOBS_OBJETIVO)}):")
     for mob in MOBS_OBJETIVO:
         print(f"      - {mob}")
-    
-    # Items drop
-    print(f"\n  🎁 ITEMS DROP ({len(DROP_ITEMS_OBJETIVO)}):")
-    for item in DROP_ITEMS_OBJETIVO:
-        print(f"      - {item}")
     
     # Umbral de similitud
     print(f"\n  🎯 Umbral de similitud: {UMBRAL_SIMILITUD*100:.0f}%")

@@ -3,20 +3,21 @@ Interfaz gráfica principal del bot Kathana.
 Interfaz de escritorio con PyQt5 para configurar y controlar el bot.
 """
 import sys
-import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QPushButton, QLabel, QLineEdit, QSpinBox, QDoubleSpinBox,
     QListWidget, QListWidgetItem, QCheckBox, QTableWidget, QTableWidgetItem,
-    QMessageBox, QFileDialog, QGroupBox, QGridLayout, QTextEdit
+    QMessageBox, QFileDialog, QGroupBox, QGridLayout, QTextEdit, QFrame,
+    QSizePolicy
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QTimer, QPointF
+from PyQt5.QtGui import QFont, QPainter, QPen, QBrush, QColor, QPolygonF
 
 from config_manager import (
     obtener_configuracion_completa, guardar_configuracion, aplicar_configuracion_a_modulo
 )
 from bot_controller import BotController
+from estado_objetivo import estado
 
 
 class GeneralTab(QWidget):
@@ -57,38 +58,6 @@ class GeneralTab(QWidget):
         group.setLayout(grid)
         layout.addWidget(group)
         
-        # Región OCR
-        group = QGroupBox("Región de Captura OCR")
-        grid = QGridLayout()
-        
-        ocr_region = self.config.get('OCR_REGION', {})
-        grid.addWidget(QLabel("Left Offset:"), 0, 0)
-        self.ocr_left = QSpinBox()
-        self.ocr_left.setRange(0, 2000)
-        self.ocr_left.setValue(ocr_region.get('left_offset', 5))
-        grid.addWidget(self.ocr_left, 0, 1)
-        
-        grid.addWidget(QLabel("Top Offset:"), 1, 0)
-        self.ocr_top = QSpinBox()
-        self.ocr_top.setRange(0, 2000)
-        self.ocr_top.setValue(ocr_region.get('top_offset', 90))
-        grid.addWidget(self.ocr_top, 1, 1)
-        
-        grid.addWidget(QLabel("Width:"), 2, 0)
-        self.ocr_width = QSpinBox()
-        self.ocr_width.setRange(1, 2000)
-        self.ocr_width.setValue(ocr_region.get('width', 150))
-        grid.addWidget(self.ocr_width, 2, 1)
-        
-        grid.addWidget(QLabel("Height:"), 3, 0)
-        self.ocr_height = QSpinBox()
-        self.ocr_height.setRange(1, 2000)
-        self.ocr_height.setValue(ocr_region.get('height', 15))
-        grid.addWidget(self.ocr_height, 3, 1)
-        
-        group.setLayout(grid)
-        layout.addWidget(group)
-        
         # Umbral de similitud
         group = QGroupBox("Umbral de Similitud")
         grid = QGridLayout()
@@ -102,6 +71,55 @@ class GeneralTab(QWidget):
         grid.addWidget(self.umbral, 0, 1)
         
         group.setLayout(grid)
+        layout.addWidget(group)
+        
+        # Notas del programador
+        group = QGroupBox("📝 Notas e Información")
+        notas_layout = QVBoxLayout()
+        
+        notas_texto = QTextEdit()
+        notas_texto.setReadOnly(True)
+        notas_texto.setMaximumHeight(180)
+        notas_texto.setStyleSheet("""
+            QTextEdit {
+                background-color: #f5f5f5;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 11px;
+            }
+        """)
+        notas_texto.setHtml("""
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 11px; }
+                h4 { color: #333; margin: 5px 0; }
+                ul { margin: 2px 0 8px 15px; padding: 0; }
+                li { margin: 2px 0; }
+                .info { color: #0066cc; }
+                .warning { color: #cc6600; }
+                .auto { color: #28a745; }
+            </style>
+            <h4>🎯 Región de Captura OCR</h4>
+            <ul>
+                <li class="auto"><b>✓ Automático:</b> La posición del área de captura se calcula automáticamente según tu configuración de DPI de Windows.</li>
+                <li>El bot detecta la altura de la barra de título (varía según DPI) y suma el offset fijo del juego.</li>
+                <li>No necesitas configurar nada - funciona en cualquier resolución/DPI.</li>
+            </ul>
+            <h4>⚙️ Umbral de Similitud</h4>
+            <ul>
+                <li>Valor entre 0.0 y 1.0 (70-80% recomendado).</li>
+                <li>Mayor valor = más estricto (menos falsos positivos).</li>
+                <li>Menor valor = más permisivo (detecta más pero puede confundirse).</li>
+            </ul>
+            <h4 class="warning">⚠️ Requisitos</h4>
+            <ul>
+                <li>Tesseract OCR debe estar instalado en el sistema.</li>
+                <li>El juego debe estar abierto y visible antes de iniciar el bot.</li>
+            </ul>
+        """)
+        notas_layout.addWidget(notas_texto)
+        
+        group.setLayout(notas_layout)
         layout.addWidget(group)
         
         layout.addStretch()
@@ -119,12 +137,6 @@ class GeneralTab(QWidget):
         return {
             'GAME_WINDOW_TITLE': self.window_title.text(),
             'TESSERACT_PATH': self.tesseract_path.text(),
-            'OCR_REGION': {
-                'left_offset': self.ocr_left.value(),
-                'top_offset': self.ocr_top.value(),
-                'width': self.ocr_width.value(),
-                'height': self.ocr_height.value(),
-            },
             'UMBRAL_SIMILITUD': self.umbral.value(),
         }
 
@@ -279,7 +291,7 @@ class HabilidadesTab(QWidget):
 
 
 class AutocuracionTab(QWidget):
-    """Pestaña de configuración de Autocuración."""
+    """Pestaña de configuración de Autocuración con niveles."""
     
     def __init__(self, config: dict):
         super().__init__()
@@ -291,52 +303,77 @@ class AutocuracionTab(QWidget):
         
         autocuracion = self.config.get('AUTOCURACION', {})
         
-        # Vida
-        group_vida = QGroupBox("Vida")
-        grid_vida = QGridLayout()
+        # ========== VIDA ==========
+        group_vida = QGroupBox("Vida - Niveles de Curación")
+        vida_layout = QVBoxLayout()
         
         vida_config = autocuracion.get('vida', {})
-        grid_vida.addWidget(QLabel("Posición X:"), 0, 0)
-        self.vida_x = QSpinBox()
-        self.vida_x.setRange(0, 2000)
-        self.vida_x.setValue(vida_config.get('x', 128))
-        grid_vida.addWidget(self.vida_x, 0, 1)
         
-        grid_vida.addWidget(QLabel("Posición Y:"), 1, 0)
-        self.vida_y = QSpinBox()
-        self.vida_y.setRange(0, 2000)
-        self.vida_y.setValue(vida_config.get('y', 62))
-        grid_vida.addWidget(self.vida_y, 1, 1)
-        
-        grid_vida.addWidget(QLabel("Teclas (separadas por coma):"), 2, 0)
-        teclas_vida = vida_config.get('tecla', [])
-        if isinstance(teclas_vida, list):
-            teclas_str = ','.join(teclas_vida)
-        else:
-            teclas_str = str(teclas_vida)
-        self.vida_teclas = QLineEdit(teclas_str)
-        grid_vida.addWidget(self.vida_teclas, 2, 1)
-        
-        grid_vida.addWidget(QLabel("Intervalo con vida (s):"), 3, 0)
+        # Intervalo cuando hay vida
+        hbox_intervalo = QHBoxLayout()
+        hbox_intervalo.addWidget(QLabel("Intervalo con vida (s):"))
         self.vida_intervalo_con = QDoubleSpinBox()
         self.vida_intervalo_con.setRange(0.0, 60.0)
         self.vida_intervalo_con.setSingleStep(0.1)
         self.vida_intervalo_con.setDecimals(2)
         self.vida_intervalo_con.setValue(vida_config.get('intervalo_con', 1.0))
-        grid_vida.addWidget(self.vida_intervalo_con, 3, 1)
+        hbox_intervalo.addWidget(self.vida_intervalo_con)
+        hbox_intervalo.addStretch()
+        vida_layout.addLayout(hbox_intervalo)
         
-        grid_vida.addWidget(QLabel("Intervalo sin vida (s):"), 4, 0)
-        self.vida_intervalo_sin = QDoubleSpinBox()
-        self.vida_intervalo_sin.setRange(0.0, 60.0)
-        self.vida_intervalo_sin.setSingleStep(0.1)
-        self.vida_intervalo_sin.setDecimals(2)
-        self.vida_intervalo_sin.setValue(vida_config.get('intervalo_sin', 0.5))
-        grid_vida.addWidget(self.vida_intervalo_sin, 4, 1)
+        # Nota explicativa
+        nota = QLabel("Cada nivel verifica un píxel. Si no hay vida, ejecuta las teclas de ese nivel.")
+        nota.setStyleSheet("color: gray; font-style: italic;")
+        vida_layout.addWidget(nota)
         
-        group_vida.setLayout(grid_vida)
+        # Tabla de niveles
+        self.tabla_niveles = QTableWidget()
+        self.tabla_niveles.setColumnCount(5)
+        self.tabla_niveles.setHorizontalHeaderLabels(["Nombre", "X", "Y", "Teclas", "Intervalo (s)"])
+        self.tabla_niveles.horizontalHeader().setStretchLastSection(True)
+        self.tabla_niveles.setMinimumHeight(150)
+        
+        # Cargar niveles existentes
+        niveles = vida_config.get('niveles', [])
+        if not niveles and 'x' in vida_config:
+            # Migrar configuración antigua a nuevo formato
+            teclas = vida_config.get('tecla', [])
+            if isinstance(teclas, str):
+                teclas = [teclas]
+            niveles = [{
+                'nombre': 'Nivel 1',
+                'x': vida_config.get('x', 50),
+                'y': vida_config.get('y', 62),
+                'teclas': teclas,
+                'intervalo_sin': vida_config.get('intervalo_sin', 0.5)
+            }]
+        
+        self.tabla_niveles.setRowCount(len(niveles))
+        for row, nivel in enumerate(niveles):
+            self.tabla_niveles.setItem(row, 0, QTableWidgetItem(nivel.get('nombre', f'Nivel {row+1}')))
+            self.tabla_niveles.setItem(row, 1, QTableWidgetItem(str(nivel.get('x', 50))))
+            self.tabla_niveles.setItem(row, 2, QTableWidgetItem(str(nivel.get('y', 62))))
+            teclas = nivel.get('teclas', [])
+            self.tabla_niveles.setItem(row, 3, QTableWidgetItem(','.join(teclas)))
+            self.tabla_niveles.setItem(row, 4, QTableWidgetItem(str(nivel.get('intervalo_sin', 0.5))))
+        
+        vida_layout.addWidget(self.tabla_niveles)
+        
+        # Botones para agregar/eliminar niveles
+        hbox_btns = QHBoxLayout()
+        btn_agregar = QPushButton("Agregar Nivel")
+        btn_agregar.clicked.connect(self.agregar_nivel_vida)
+        btn_eliminar = QPushButton("Eliminar Nivel")
+        btn_eliminar.clicked.connect(self.eliminar_nivel_vida)
+        hbox_btns.addWidget(btn_agregar)
+        hbox_btns.addWidget(btn_eliminar)
+        hbox_btns.addStretch()
+        vida_layout.addLayout(hbox_btns)
+        
+        group_vida.setLayout(vida_layout)
         layout.addWidget(group_vida)
         
-        # Maná
+        # ========== MANÁ (sin cambios) ==========
         group_mana = QGroupBox("Maná")
         grid_mana = QGridLayout()
         
@@ -379,16 +416,53 @@ class AutocuracionTab(QWidget):
         layout.addStretch()
         self.setLayout(layout)
     
+    def agregar_nivel_vida(self):
+        row = self.tabla_niveles.rowCount()
+        self.tabla_niveles.insertRow(row)
+        self.tabla_niveles.setItem(row, 0, QTableWidgetItem(f"Nivel {row+1}"))
+        self.tabla_niveles.setItem(row, 1, QTableWidgetItem("50"))
+        self.tabla_niveles.setItem(row, 2, QTableWidgetItem("62"))
+        self.tabla_niveles.setItem(row, 3, QTableWidgetItem("0"))
+        self.tabla_niveles.setItem(row, 4, QTableWidgetItem("0.5"))
+    
+    def eliminar_nivel_vida(self):
+        current_row = self.tabla_niveles.currentRow()
+        if current_row >= 0:
+            self.tabla_niveles.removeRow(current_row)
+    
     def obtener_valores(self) -> dict:
-        teclas_vida = [t.strip() for t in self.vida_teclas.text().split(',') if t.strip()]
+        # Obtener niveles de vida
+        niveles = []
+        for row in range(self.tabla_niveles.rowCount()):
+            nombre = self.tabla_niveles.item(row, 0).text() if self.tabla_niveles.item(row, 0) else f"Nivel {row+1}"
+            try:
+                x = int(self.tabla_niveles.item(row, 1).text())
+            except:
+                x = 50
+            try:
+                y = int(self.tabla_niveles.item(row, 2).text())
+            except:
+                y = 62
+            teclas_str = self.tabla_niveles.item(row, 3).text() if self.tabla_niveles.item(row, 3) else "0"
+            teclas = [t.strip() for t in teclas_str.split(',') if t.strip()]
+            try:
+                intervalo_sin = float(self.tabla_niveles.item(row, 4).text())
+            except:
+                intervalo_sin = 0.5
+            
+            niveles.append({
+                'nombre': nombre,
+                'x': x,
+                'y': y,
+                'teclas': teclas,
+                'intervalo_sin': intervalo_sin
+            })
+        
         return {
             'AUTOCURACION': {
                 'vida': {
-                    'x': self.vida_x.value(),
-                    'y': self.vida_y.value(),
-                    'tecla': teclas_vida,
+                    'niveles': niveles,
                     'intervalo_con': self.vida_intervalo_con.value(),
-                    'intervalo_sin': self.vida_intervalo_sin.value(),
                 },
                 'mana': {
                     'x': self.mana_x.value(),
@@ -645,6 +719,345 @@ class EscapeTab(QWidget):
         }
 
 
+class MapaVisualizacion(QFrame):
+    """Widget que muestra una visualización del mapa con el polígono y la posición actual."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumSize(250, 250)
+        self.setMaximumSize(300, 300)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setStyleSheet("background-color: #1a1a2e; border: 2px solid #16213e; border-radius: 5px;")
+        
+        # Datos del mapa
+        self.mapa_size = 1000  # El mapa es 1000x1000
+        self.poligono = []
+        self.pos_actual = None  # (x, y) o None
+        self.dentro_area = True
+    
+    def set_poligono(self, puntos: list):
+        """Establece los puntos del polígono."""
+        self.poligono = puntos
+        self.update()
+    
+    def set_posicion(self, x: int, y: int, dentro: bool):
+        """Actualiza la posición actual del personaje."""
+        self.pos_actual = (x, y)
+        self.dentro_area = dentro
+        self.update()
+    
+    def clear_posicion(self):
+        """Limpia la posición actual."""
+        self.pos_actual = None
+        self.update()
+    
+    def _escalar_punto(self, x: float, y: float) -> tuple:
+        """Convierte coordenadas del mapa a coordenadas del widget."""
+        margen = 15
+        ancho_util = self.width() - 2 * margen
+        alto_util = self.height() - 2 * margen
+        
+        px = margen + (x / self.mapa_size) * ancho_util
+        py = margen + (y / self.mapa_size) * alto_util
+        return (px, py)
+    
+    def paintEvent(self, event):
+        """Dibuja el mapa, polígono y posición."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        margen = 15
+        ancho = self.width()
+        alto = self.height()
+        
+        # Fondo con grid
+        painter.setPen(QPen(QColor(40, 40, 60), 1))
+        step = (ancho - 2 * margen) / 10
+        for i in range(11):
+            x = margen + i * step
+            painter.drawLine(int(x), margen, int(x), alto - margen)
+            y = margen + i * step
+            painter.drawLine(margen, int(y), ancho - margen, int(y))
+        
+        # Borde del área del mapa
+        painter.setPen(QPen(QColor(100, 100, 150), 2))
+        painter.drawRect(margen, margen, ancho - 2*margen, alto - 2*margen)
+        
+        # Etiquetas de coordenadas
+        painter.setPen(QColor(150, 150, 180))
+        painter.setFont(QFont("Arial", 7))
+        painter.drawText(margen, alto - 3, "0")
+        painter.drawText(ancho - margen - 25, alto - 3, "1000")
+        painter.drawText(3, margen + 10, "0")
+        painter.drawText(3, alto - margen, "1000")
+        
+        # Dibujar polígono
+        if len(self.poligono) >= 3:
+            # Relleno semitransparente
+            poly_points = QPolygonF()
+            for punto in self.poligono:
+                px, py = self._escalar_punto(punto[0], punto[1])
+                poly_points.append(QPointF(px, py))
+            
+            painter.setBrush(QBrush(QColor(0, 255, 100, 40)))
+            painter.setPen(QPen(QColor(0, 255, 100), 2))
+            painter.drawPolygon(poly_points)
+            
+            # Dibujar vértices
+            painter.setBrush(QBrush(QColor(0, 255, 100)))
+            for punto in self.poligono:
+                px, py = self._escalar_punto(punto[0], punto[1])
+                painter.drawEllipse(int(px) - 4, int(py) - 4, 8, 8)
+        
+        # Dibujar posición actual
+        if self.pos_actual:
+            px, py = self._escalar_punto(self.pos_actual[0], self.pos_actual[1])
+            
+            # Color según si está dentro o fuera
+            if self.dentro_area:
+                color = QColor(0, 200, 255)  # Cyan si está dentro
+            else:
+                color = QColor(255, 50, 50)  # Rojo si está fuera
+            
+            # Círculo exterior
+            painter.setBrush(QBrush(QColor(color.red(), color.green(), color.blue(), 100)))
+            painter.setPen(QPen(color, 2))
+            painter.drawEllipse(int(px) - 10, int(py) - 10, 20, 20)
+            
+            # Punto central
+            painter.setBrush(QBrush(color))
+            painter.drawEllipse(int(px) - 5, int(py) - 5, 10, 10)
+            
+            # Mostrar coordenadas
+            painter.setPen(QColor(255, 255, 255))
+            painter.setFont(QFont("Arial", 8, QFont.Bold))
+            texto = f"({self.pos_actual[0]}, {self.pos_actual[1]})"
+            painter.drawText(int(px) + 12, int(py) + 4, texto)
+        
+        painter.end()
+
+
+class ControlAreaTab(QWidget):
+    """Pestaña de Control de Área - Mantiene al personaje dentro de un polígono."""
+    
+    def __init__(self, config: dict):
+        super().__init__()
+        self.config = config.get('CONTROL_AREA', {})
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Layout principal horizontal: izquierda config, derecha mapa
+        main_hbox = QHBoxLayout()
+        
+        # --- Columna izquierda: Configuración ---
+        left_layout = QVBoxLayout()
+        
+        # Habilitado
+        group_enabled = QGroupBox("Activación")
+        hbox_enabled = QHBoxLayout()
+        
+        self.checkbox_habilitado = QCheckBox("Habilitar Control de Área")
+        self.checkbox_habilitado.setChecked(self.config.get('habilitado', False))
+        self.checkbox_habilitado.setStyleSheet("font-weight: bold; font-size: 12px;")
+        hbox_enabled.addWidget(self.checkbox_habilitado)
+        hbox_enabled.addStretch()
+        
+        group_enabled.setLayout(hbox_enabled)
+        left_layout.addWidget(group_enabled)
+        
+        # Polígono
+        group_poligono = QGroupBox("Polígono de Área Permitida")
+        vbox_poligono = QVBoxLayout()
+        
+        info_poligono = QLabel("Coordenadas del mapa (X / Y del minimapa):")
+        info_poligono.setStyleSheet("color: #666;")
+        vbox_poligono.addWidget(info_poligono)
+        
+        self.tabla_poligono = QTableWidget()
+        self.tabla_poligono.setColumnCount(2)
+        self.tabla_poligono.setHorizontalHeaderLabels(["X", "Y"])
+        self.tabla_poligono.horizontalHeader().setStretchLastSection(True)
+        self.tabla_poligono.setMaximumHeight(120)
+        
+        poligono = self.config.get('poligono', [])
+        self.tabla_poligono.setRowCount(len(poligono))
+        for row, punto in enumerate(poligono):
+            self.tabla_poligono.setItem(row, 0, QTableWidgetItem(str(punto[0])))
+            self.tabla_poligono.setItem(row, 1, QTableWidgetItem(str(punto[1])))
+        
+        # Conectar cambios en la tabla para actualizar el mapa
+        self.tabla_poligono.itemChanged.connect(self.actualizar_mapa_desde_tabla)
+        
+        vbox_poligono.addWidget(self.tabla_poligono)
+        
+        hbox_btns = QHBoxLayout()
+        btn_agregar = QPushButton("+ Agregar")
+        btn_agregar.clicked.connect(self.agregar_punto)
+        btn_eliminar = QPushButton("- Eliminar")
+        btn_eliminar.clicked.connect(self.eliminar_punto)
+        hbox_btns.addWidget(btn_agregar)
+        hbox_btns.addWidget(btn_eliminar)
+        hbox_btns.addStretch()
+        vbox_poligono.addLayout(hbox_btns)
+        
+        group_poligono.setLayout(vbox_poligono)
+        left_layout.addWidget(group_poligono)
+        
+        main_hbox.addLayout(left_layout, stretch=1)
+        
+        # --- Columna derecha: Visualización del Mapa ---
+        right_layout = QVBoxLayout()
+        
+        group_mapa = QGroupBox("🗺️ Visualización del Mapa")
+        vbox_mapa = QVBoxLayout()
+        
+        self.mapa_widget = MapaVisualizacion()
+        self.mapa_widget.set_poligono(poligono)
+        vbox_mapa.addWidget(self.mapa_widget, alignment=Qt.AlignCenter)
+        
+        # Label de estado
+        self.label_estado = QLabel("Posición: -- / --")
+        self.label_estado.setAlignment(Qt.AlignCenter)
+        self.label_estado.setStyleSheet("font-size: 11px; color: #888;")
+        vbox_mapa.addWidget(self.label_estado)
+        
+        group_mapa.setLayout(vbox_mapa)
+        right_layout.addWidget(group_mapa)
+        right_layout.addStretch()
+        
+        main_hbox.addLayout(right_layout)
+        
+        layout.addLayout(main_hbox)
+        
+        # Intervalos
+        group_intervalos = QGroupBox("Intervalos de Tiempo")
+        grid_intervalos = QGridLayout()
+        
+        grid_intervalos.addWidget(QLabel("Intervalo lectura (s):"), 0, 0)
+        self.intervalo_lectura = QDoubleSpinBox()
+        self.intervalo_lectura.setRange(0.1, 10.0)
+        self.intervalo_lectura.setSingleStep(0.1)
+        self.intervalo_lectura.setDecimals(2)
+        self.intervalo_lectura.setValue(self.config.get('intervalo_lectura', 0.5))
+        grid_intervalos.addWidget(self.intervalo_lectura, 0, 1)
+        
+        grid_intervalos.addWidget(QLabel("Intervalo corrección (s):"), 1, 0)
+        self.intervalo_correccion = QDoubleSpinBox()
+        self.intervalo_correccion.setRange(0.1, 10.0)
+        self.intervalo_correccion.setSingleStep(0.1)
+        self.intervalo_correccion.setDecimals(2)
+        self.intervalo_correccion.setValue(self.config.get('intervalo_correccion', 0.2))
+        grid_intervalos.addWidget(self.intervalo_correccion, 1, 1)
+        
+        grid_intervalos.addWidget(QLabel("Duración movimiento (s):"), 2, 0)
+        self.duracion_movimiento = QDoubleSpinBox()
+        self.duracion_movimiento.setRange(0.1, 5.0)
+        self.duracion_movimiento.setSingleStep(0.1)
+        self.duracion_movimiento.setDecimals(2)
+        self.duracion_movimiento.setValue(self.config.get('duracion_movimiento', 0.3))
+        grid_intervalos.addWidget(self.duracion_movimiento, 2, 1)
+        
+        group_intervalos.setLayout(grid_intervalos)
+        layout.addWidget(group_intervalos)
+        
+        # Notas
+        group_notas = QGroupBox("📝 Notas")
+        vbox_notas = QVBoxLayout()
+        
+        notas = QTextEdit()
+        notas.setReadOnly(True)
+        notas.setMaximumHeight(120)
+        notas.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd;")
+        notas.setHtml("""
+            <style>
+                body { font-size: 11px; }
+                ul { margin: 5px 0 5px 15px; }
+            </style>
+            <b>Cómo funciona:</b>
+            <ul>
+                <li>El bot lee las coordenadas X/Y del minimapa usando OCR.</li>
+                <li>Si el personaje sale del polígono, se pausan todas las acciones excepto autocuración.</li>
+                <li>El bot presiona W/A/S/D para regresar al centro del polígono.</li>
+                <li>Los controles asumen cámara invertida (W=Sur, S=Norte, A=Este, D=Oeste).</li>
+            </ul>
+        """)
+        vbox_notas.addWidget(notas)
+        
+        group_notas.setLayout(vbox_notas)
+        layout.addWidget(group_notas)
+        
+        layout.addStretch()
+        self.setLayout(layout)
+    
+    def actualizar_mapa_desde_tabla(self):
+        """Actualiza el widget del mapa cuando cambian los puntos del polígono."""
+        poligono = []
+        for row in range(self.tabla_poligono.rowCount()):
+            try:
+                item_x = self.tabla_poligono.item(row, 0)
+                item_y = self.tabla_poligono.item(row, 1)
+                if item_x and item_y:
+                    x = int(item_x.text())
+                    y = int(item_y.text())
+                    poligono.append([x, y])
+            except:
+                pass
+        self.mapa_widget.set_poligono(poligono)
+    
+    def actualizar_posicion(self, x: int, y: int, dentro: bool):
+        """Actualiza la posición del personaje en el mapa."""
+        self.mapa_widget.set_posicion(x, y, dentro)
+        estado_txt = "DENTRO" if dentro else "FUERA"
+        color = "#00c853" if dentro else "#ff5252"
+        self.label_estado.setText(f"Posición: {x} / {y} - <span style='color:{color}'>{estado_txt}</span>")
+    
+    def limpiar_posicion(self):
+        """Limpia la posición del mapa."""
+        self.mapa_widget.clear_posicion()
+        self.label_estado.setText("Posición: -- / --")
+    
+    def agregar_punto(self):
+        from PyQt5.QtWidgets import QInputDialog
+        x, ok1 = QInputDialog.getInt(self, "Agregar Punto", "Coordenada X del mapa:", 0, 0, 1000)
+        if ok1:
+            y, ok2 = QInputDialog.getInt(self, "Agregar Punto", "Coordenada Y del mapa:", 0, 0, 1000)
+            if ok2:
+                row = self.tabla_poligono.rowCount()
+                self.tabla_poligono.insertRow(row)
+                self.tabla_poligono.setItem(row, 0, QTableWidgetItem(str(x)))
+                self.tabla_poligono.setItem(row, 1, QTableWidgetItem(str(y)))
+                self.actualizar_mapa_desde_tabla()
+    
+    def eliminar_punto(self):
+        current_row = self.tabla_poligono.currentRow()
+        if current_row >= 0:
+            self.tabla_poligono.removeRow(current_row)
+            self.actualizar_mapa_desde_tabla()
+    
+    def obtener_valores(self) -> dict:
+        # Polígono
+        poligono = []
+        for row in range(self.tabla_poligono.rowCount()):
+            try:
+                x = int(self.tabla_poligono.item(row, 0).text())
+                y = int(self.tabla_poligono.item(row, 1).text())
+                poligono.append([x, y])
+            except:
+                pass
+        
+        return {
+            'CONTROL_AREA': {
+                'habilitado': self.checkbox_habilitado.isChecked(),
+                'poligono': poligono,
+                'intervalo_lectura': self.intervalo_lectura.value(),
+                'intervalo_correccion': self.intervalo_correccion.value(),
+                'duracion_movimiento': self.duracion_movimiento.value(),
+            }
+        }
+
+
 class MainWindow(QMainWindow):
     """Ventana principal de la aplicación."""
     
@@ -693,9 +1106,6 @@ class MainWindow(QMainWindow):
         self.tab_mobs = ListaEditableTab(self.config, 'MOBS_OBJETIVO', 'Mob')
         self.tabs.addTab(self.tab_mobs, "Mobs Objetivo")
         
-        self.tab_items = ListaEditableTab(self.config, 'DROP_ITEMS_OBJETIVO', 'Item')
-        self.tabs.addTab(self.tab_items, "Items Drop")
-        
         self.tab_loot = LootDropTab(self.config)
         self.tabs.addTab(self.tab_loot, "Loot/Drop")
         
@@ -710,6 +1120,9 @@ class MainWindow(QMainWindow):
         
         self.tab_escape = EscapeTab(self.config)
         self.tabs.addTab(self.tab_escape, "Escape")
+        
+        self.tab_control_area = ControlAreaTab(self.config)
+        self.tabs.addTab(self.tab_control_area, "Control Área")
         
         layout.addWidget(self.tabs)
         
@@ -759,11 +1172,6 @@ class MainWindow(QMainWindow):
         # Actualizar pestaña General
         self.tab_general.window_title.setText(config.get('GAME_WINDOW_TITLE', ''))
         self.tab_general.tesseract_path.setText(config.get('TESSERACT_PATH', ''))
-        ocr_region = config.get('OCR_REGION', {})
-        self.tab_general.ocr_left.setValue(ocr_region.get('left_offset', 5))
-        self.tab_general.ocr_top.setValue(ocr_region.get('top_offset', 90))
-        self.tab_general.ocr_width.setValue(ocr_region.get('width', 150))
-        self.tab_general.ocr_height.setValue(ocr_region.get('height', 15))
         self.tab_general.umbral.setValue(config.get('UMBRAL_SIMILITUD', 0.70))
         
         # Actualizar pestaña Mobs
@@ -771,12 +1179,6 @@ class MainWindow(QMainWindow):
         for mob in config.get('MOBS_OBJETIVO', []):
             if mob:
                 self.tab_mobs.lista.addItem(mob)
-        
-        # Actualizar pestaña Items
-        self.tab_items.lista.clear()
-        for item in config.get('DROP_ITEMS_OBJETIVO', []):
-            if item:
-                self.tab_items.lista.addItem(item)
         
         # Actualizar pestaña Loot
         loot_config = config.get('LOOT_DROP', {})
@@ -799,16 +1201,31 @@ class MainWindow(QMainWindow):
         # Actualizar pestaña Autocuración
         autocuracion = config.get('AUTOCURACION', {})
         vida_config = autocuracion.get('vida', {})
-        self.tab_autocuracion.vida_x.setValue(vida_config.get('x', 128))
-        self.tab_autocuracion.vida_y.setValue(vida_config.get('y', 62))
-        teclas_vida = vida_config.get('tecla', [])
-        if isinstance(teclas_vida, list):
-            teclas_str = ','.join(teclas_vida)
-        else:
-            teclas_str = str(teclas_vida)
-        self.tab_autocuracion.vida_teclas.setText(teclas_str)
         self.tab_autocuracion.vida_intervalo_con.setValue(vida_config.get('intervalo_con', 1.0))
-        self.tab_autocuracion.vida_intervalo_sin.setValue(vida_config.get('intervalo_sin', 0.5))
+        
+        # Actualizar tabla de niveles de vida
+        niveles = vida_config.get('niveles', [])
+        if not niveles and 'x' in vida_config:
+            # Migrar configuración antigua
+            teclas = vida_config.get('tecla', [])
+            if isinstance(teclas, str):
+                teclas = [teclas]
+            niveles = [{
+                'nombre': 'Nivel 1',
+                'x': vida_config.get('x', 50),
+                'y': vida_config.get('y', 62),
+                'teclas': teclas,
+                'intervalo_sin': vida_config.get('intervalo_sin', 0.5)
+            }]
+        
+        self.tab_autocuracion.tabla_niveles.setRowCount(len(niveles))
+        for row, nivel in enumerate(niveles):
+            self.tab_autocuracion.tabla_niveles.setItem(row, 0, QTableWidgetItem(nivel.get('nombre', f'Nivel {row+1}')))
+            self.tab_autocuracion.tabla_niveles.setItem(row, 1, QTableWidgetItem(str(nivel.get('x', 50))))
+            self.tab_autocuracion.tabla_niveles.setItem(row, 2, QTableWidgetItem(str(nivel.get('y', 62))))
+            teclas = nivel.get('teclas', [])
+            self.tab_autocuracion.tabla_niveles.setItem(row, 3, QTableWidgetItem(','.join(teclas)))
+            self.tab_autocuracion.tabla_niveles.setItem(row, 4, QTableWidgetItem(str(nivel.get('intervalo_sin', 0.5))))
         
         mana_config = autocuracion.get('mana', {})
         self.tab_autocuracion.mana_x.setValue(mana_config.get('x', 45))
@@ -846,6 +1263,21 @@ class MainWindow(QMainWindow):
             self.tab_escape.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
             self.tab_escape.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
             row += 1
+        
+        # Actualizar pestaña Control Área
+        control_area = config.get('CONTROL_AREA', {})
+        self.tab_control_area.checkbox_habilitado.setChecked(control_area.get('habilitado', False))
+        self.tab_control_area.intervalo_lectura.setValue(control_area.get('intervalo_lectura', 0.5))
+        self.tab_control_area.intervalo_correccion.setValue(control_area.get('intervalo_correccion', 0.2))
+        self.tab_control_area.duracion_movimiento.setValue(control_area.get('duracion_movimiento', 0.3))
+        
+        self.tab_control_area.tabla_poligono.setRowCount(0)
+        poligono = control_area.get('poligono', [])
+        for punto in poligono:
+            row = self.tab_control_area.tabla_poligono.rowCount()
+            self.tab_control_area.tabla_poligono.insertRow(row)
+            self.tab_control_area.tabla_poligono.setItem(row, 0, QTableWidgetItem(str(punto[0])))
+            self.tab_control_area.tabla_poligono.setItem(row, 1, QTableWidgetItem(str(punto[1])))
     
     def obtener_configuracion_desde_interfaz(self) -> dict:
         """Recopila la configuración actual desde todas las pestañas de la interfaz."""
@@ -854,12 +1286,12 @@ class MainWindow(QMainWindow):
         # Recopilar valores de todas las pestañas
         config.update(self.tab_general.obtener_valores())
         config['MOBS_OBJETIVO'] = self.tab_mobs.obtener_valores()
-        config['DROP_ITEMS_OBJETIVO'] = self.tab_items.obtener_valores()
         config.update(self.tab_loot.obtener_valores())
         config.update(self.tab_habilidades.obtener_valores())
         config.update(self.tab_autocuracion.obtener_valores())
         config.update(self.tab_observador.obtener_valores())
         config.update(self.tab_escape.obtener_valores())
+        config.update(self.tab_control_area.obtener_valores())
         
         return config
     
@@ -921,6 +1353,20 @@ class MainWindow(QMainWindow):
                 info_text = f"{emoji} {tipo}: {nombre} | Tiempo: {tiempo:.1f}s"
             
             self.info_label.setText(info_text)
+            
+            # Actualizar posición en el mapa de Control Área
+            try:
+                pos = estado.obtener_posicion()
+                # Actualizar siempre que haya coordenadas válidas (x o y > 0)
+                if pos['x'] > 0 or pos['y'] > 0:
+                    self.tab_control_area.actualizar_posicion(
+                        pos['x'], pos['y'], pos['dentro_area']
+                    )
+            except Exception as e:
+                print(f"[GUI] Error actualizando posición: {e}")
+        else:
+            # Bot detenido - limpiar posición del mapa
+            self.tab_control_area.limpiar_posicion()
 
 
 def main():

@@ -16,6 +16,7 @@ from hilo_autocuracion import HiloAutocuracion
 from hilo_observador_objetivo import HiloObservadorObjetivo
 from hilo_recoger_drop import HiloRecogerDrop
 from hilo_mob_trabado import HiloMobTrabado
+from hilo_control_area import HiloControlArea
 
 
 class BotController:
@@ -76,6 +77,11 @@ class BotController:
             hilo_esc = HiloMobTrabado(self.game_window.hwnd)
             hilo_esc.iniciar()
             self.hilos.append(hilo_esc)
+            
+            # Control de área (mantener personaje dentro del polígono)
+            control_area = HiloControlArea(self.game_window.hwnd)
+            control_area.iniciar()
+            self.hilos.append(control_area)
             
             self.ejecutando = True
             self.error_message = None

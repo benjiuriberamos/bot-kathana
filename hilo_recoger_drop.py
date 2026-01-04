@@ -68,15 +68,16 @@ class HiloRecogerDrop:
 
         # Leer configuración dinámicamente desde el módulo
         config_loot = LOOT_DROP
-        repeticiones = max(0, int(config_loot.get('repeticiones_f', 3)))
+        repeticiones = max(0, int(config_loot.get('repeticiones_f', 0)))
         intervalo = float(config_loot.get('intervalo_f', 0.5))
 
         # Presionar F repeticiones configuradas
-        for i in range(repeticiones):
-            self._presionar_tecla_f()
-            print(f"[LOOT] Tecla F presionada ({i+1}/{repeticiones})")
-            if i < repeticiones - 1:
-                time.sleep(intervalo)
+        if repeticiones > 0:
+            for i in range(repeticiones):
+                self._presionar_tecla_f()
+                print(f"[LOOT] Tecla F presionada ({i+1}/{repeticiones})")
+                if i < repeticiones - 1:
+                    time.sleep(intervalo)
 
         # Esperar hasta ~1.s totales (0.5 + 0.5 + 0.5)
         # time.sleep(0.5)

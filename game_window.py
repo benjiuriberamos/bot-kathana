@@ -3,7 +3,6 @@ Módulo para gestionar la ventana del juego.
 Responsabilidad: Encontrar y gestionar la ventana del juego (Single Responsibility Principle)
 """
 import ctypes
-from ctypes import wintypes
 
 
 class RECT(ctypes.Structure):

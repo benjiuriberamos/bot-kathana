@@ -68,16 +68,15 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
         return {
             'GAME_WINDOW_TITLE': cfg.GAME_WINDOW_TITLE,
             'TESSERACT_PATH': cfg.TESSERACT_PATH,
-            'OCR_REGION': cfg.OCR_REGION,
             'UMBRAL_SIMILITUD': cfg.UMBRAL_SIMILITUD,
             'MOBS_OBJETIVO': cfg.MOBS_OBJETIVO,
-            'DROP_ITEMS_OBJETIVO': cfg.DROP_ITEMS_OBJETIVO,
             'LOOT_DROP': cfg.LOOT_DROP,
             'HABILIDADES': cfg.HABILIDADES,
             'AUTOCURACION': cfg.AUTOCURACION,
             'OBSERVADOR_OBJETIVO': cfg.OBSERVADOR_OBJETIVO,
             'ESCAPE_MOB': cfg.ESCAPE_MOB,
             'ESCAPE_BY_MOB': cfg.ESCAPE_BY_MOB,
+            'CONTROL_AREA': cfg.CONTROL_AREA,
         }
     except Exception as e:
         print(f"Error al cargar configuración por defecto: {e}")
@@ -98,14 +97,10 @@ def aplicar_configuracion_a_modulo(config: Dict[str, Any]) -> None:
         cfg.GAME_WINDOW_TITLE = config['GAME_WINDOW_TITLE']
     if 'TESSERACT_PATH' in config:
         cfg.TESSERACT_PATH = config['TESSERACT_PATH']
-    if 'OCR_REGION' in config:
-        cfg.OCR_REGION = config['OCR_REGION']
     if 'UMBRAL_SIMILITUD' in config:
         cfg.UMBRAL_SIMILITUD = config['UMBRAL_SIMILITUD']
     if 'MOBS_OBJETIVO' in config:
         cfg.MOBS_OBJETIVO = config['MOBS_OBJETIVO']
-    if 'DROP_ITEMS_OBJETIVO' in config:
-        cfg.DROP_ITEMS_OBJETIVO = config['DROP_ITEMS_OBJETIVO']
     if 'LOOT_DROP' in config:
         cfg.LOOT_DROP = config['LOOT_DROP']
     if 'HABILIDADES' in config:
@@ -118,4 +113,6 @@ def aplicar_configuracion_a_modulo(config: Dict[str, Any]) -> None:
         cfg.ESCAPE_MOB = config['ESCAPE_MOB']
     if 'ESCAPE_BY_MOB' in config:
         cfg.ESCAPE_BY_MOB = config['ESCAPE_BY_MOB']
+    if 'CONTROL_AREA' in config:
+        cfg.CONTROL_AREA = config['CONTROL_AREA']
 

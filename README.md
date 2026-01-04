@@ -240,6 +240,128 @@ Continuar ciclo normal...
 3. Ajusta las coordenadas según tu resolución de pantalla
 4. Usa Ctrl+C para detener el bot de forma segura
 
+## 📦 Generar Ejecutable (.exe)
+
+Puedes generar un ejecutable standalone para distribuir el bot sin necesidad de tener Python instalado.
+
+### Requisitos previos
+
+1. **Python 3.7+** instalado
+2. **Entorno virtual** configurado con todas las dependencias:
+   ```bash
+   # Crear entorno virtual (si no existe)
+   python -m venv venv
+   
+   # Activar entorno virtual
+   # Windows CMD:
+   venv\Scripts\activate.bat
+   # Windows PowerShell:
+   venv\Scripts\Activate.ps1
+   
+   # Instalar dependencias
+   pip install -r requirements.txt
+   ```
+
+3. **PyInstaller** instalado (ya incluido en requirements.txt):
+   ```bash
+   pip install pyinstaller
+   ```
+
+### Opción 1: Usar los scripts automáticos (Recomendado)
+
+#### Windows CMD (Símbolo del sistema)
+```batch
+build_exe.bat
+```
+
+#### Windows PowerShell
+```powershell
+.\build_exe.ps1
+```
+
+> **Nota:** Si PowerShell bloquea la ejecución, primero ejecuta:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+Los scripts automáticamente:
+- Activan el entorno virtual
+- Cierran cualquier instancia de BotKathana.exe en ejecución
+- Limpian builds anteriores
+- Generan el nuevo ejecutable
+
+### Opción 2: Generar manualmente con PyInstaller
+
+```bash
+# Activar entorno virtual primero
+venv\Scripts\activate
+
+# Generar ejecutable usando el archivo .spec
+pyinstaller BotKathana.spec --clean
+```
+
+O sin archivo .spec (genera uno nuevo):
+```bash
+pyinstaller gui_main.py --onefile --noconsole --name BotKathana --clean
+```
+
+### Ubicación del ejecutable
+
+El ejecutable se genera en:
+```
+dist\BotKathana.exe
+```
+
+### Archivos incluidos en el ejecutable
+
+El archivo `BotKathana.spec` configura PyInstaller para incluir:
+- `config.json` - Configuración del bot
+- Todos los módulos Python del proyecto
+- Dependencias de PyQt5, OpenCV, Tesseract, etc.
+
+### Distribución
+
+Para distribuir el bot, necesitas:
+
+1. **BotKathana.exe** - El ejecutable generado
+2. **Tesseract OCR** - Debe estar instalado en el sistema destino
+   - Descarga: https://github.com/UB-Mannheim/tesseract/wiki
+   - Ruta por defecto: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+
+### Personalización del ejecutable
+
+Puedes modificar `BotKathana.spec` para:
+
+- **Agregar un icono:**
+  ```python
+  icon='ruta/a/tu/icono.ico',
+  ```
+
+- **Mostrar consola** (útil para debug):
+  ```python
+  console=True,
+  ```
+
+- **Incluir archivos adicionales:**
+  ```python
+  datas=[
+      ('config.json', '.'),
+      ('otro_archivo.txt', '.'),
+  ],
+  ```
+
+### Solución de problemas al generar
+
+| Problema | Solución |
+|----------|----------|
+| "El archivo está en uso" | Cierra BotKathana.exe y vuelve a intentar |
+| "ModuleNotFoundError" | Agrega el módulo a `hiddenimports` en el .spec |
+| "No se encuentra pyinstaller" | Ejecuta `pip install pyinstaller` |
+| Ejecutable muy grande | Normal (~50-100MB por incluir PyQt5 y OpenCV) |
+| Antivirus bloquea | Agrega excepción o firma el ejecutable |
+
+---
+
 ## 🛠️ Solución de Problemas
 
 ### "No se encontró la ventana"

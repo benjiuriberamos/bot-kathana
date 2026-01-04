@@ -77,7 +77,7 @@ class HiloObservadorObjetivo:
             if tipo_actual == TipoObjetivo.NULO:
                 # Sin objetivo -> presionar E
                 self._presionar_tecla_para_seleccionar()
-                time.sleep(1.5)  # Esperar un poco antes de volver a intentar
+                time.sleep(0.5)  # Esperar un poco antes de volver a intentar
                 
             elif tipo_actual in [TipoObjetivo.MOB, TipoObjetivo.DROP]:
                 estado.pausar_todos_los_hilos_excepto('habilidades')

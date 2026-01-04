@@ -7,7 +7,7 @@ Se pausa cuando el estado indica que los hilos deben detenerse.
 import ctypes
 import time
 import threading
-from typing import Tuple, List
+from typing import Tuple
 
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import AUTOCURACION, VK_CODES
@@ -196,40 +196,65 @@ class HiloAutocuracion:
         return False, color
     
     def _ciclo_vida(self) -> None:
-        """Ciclo de monitoreo de vida."""
+        """Ciclo de monitoreo de vida con múltiples niveles."""
         print("[AUTOCURACIÓN] Hilo de vida iniciado")
-        contador = 0
         
         while self.ejecutando:
             # Leer configuración dinámicamente desde el módulo
-            config = AUTOCURACION['vida']
+            import configuracion
+            config_vida = configuracion.AUTOCURACION['vida']
             
             # Verificar si este hilo está activo
             if not estado.hilo_activo('autocuracion'):
                 time.sleep(0.1)
                 continue
             
-            tiene_vida, color = self._tiene_vida(config['x'], config['y'])
-            contador += 1
-            
-            if tiene_vida:
-                time.sleep(config['intervalo_con'])
+            # Verificar si es configuración nueva (con niveles) o antigua
+            if 'niveles' in config_vida:
+                # Nueva configuración con múltiples niveles
+                vida_ok = True
+                
+                for nivel in config_vida['niveles']:
+                    tiene_vida, color = self._tiene_vida(nivel['x'], nivel['y'])
+                    
+                    if not tiene_vida:
+                        vida_ok = False
+                        tipo_actual = estado.tipo
+                        print(f"[VIDA] {nivel['nombre']} | Sin vida en ({nivel['x']}, {nivel['y']}) | Color: RGB{color} | Presionando '{nivel['teclas']}'")
+                        
+                        for tecla in nivel['teclas']:
+                            # Solo presionar teclas distintas de '0' si estamos en combate
+                            if tipo_actual != TipoObjetivo.MOB and tecla != '0':
+                                continue
+                            self._presionar_tecla(tecla)
+                        
+                        time.sleep(nivel.get('intervalo_sin', 0.5))
+                        break  # Procesar solo el primer nivel que falle
+                
+                if vida_ok:
+                    time.sleep(config_vida.get('intervalo_con', 1.0))
             else:
-                # Obtener tipo una vez antes del loop
-                tipo_actual = estado.tipo
-                print(f"[VIDA] Sin vida | Color: RGB{color} | Presionando '{config['tecla']}'")
-                for tecla in config['tecla']:
-                    if tipo_actual != TipoObjetivo.MOB and tecla != '0':
-                        continue
-                    self._presionar_tecla(tecla)
-                time.sleep(config['intervalo_sin'])
+                # Configuración antigua (compatibilidad hacia atrás)
+                config = config_vida
+                tiene_vida, color = self._tiene_vida(config['x'], config['y'])
+                
+                if tiene_vida:
+                    time.sleep(config['intervalo_con'])
+                else:
+                    tipo_actual = estado.tipo
+                    teclas = config['tecla'] if isinstance(config['tecla'], list) else [config['tecla']]
+                    print(f"[VIDA] Sin vida | Color: RGB{color} | Presionando '{teclas}'")
+                    for tecla in teclas:
+                        if tipo_actual != TipoObjetivo.MOB and tecla != '0':
+                            continue
+                        self._presionar_tecla(tecla)
+                    time.sleep(config['intervalo_sin'])
         
         print("[AUTOCURACIÓN] Hilo de vida detenido")
     
     def _ciclo_mana(self) -> None:
         """Ciclo de monitoreo de maná."""
         print("[AUTOCURACIÓN] Hilo de maná iniciado")
-        contador = 0
         
         while self.ejecutando:
             # Leer configuración dinámicamente desde el módulo
@@ -241,7 +266,6 @@ class HiloAutocuracion:
                 continue
             
             tiene_mana, color = self._tiene_mana(config['x'], config['y'])
-            contador += 1
             
             if tiene_mana:
                 time.sleep(config['intervalo_con'])

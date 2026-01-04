@@ -12,14 +12,9 @@ GAME_WINDOW_TITLE = "Kathana - The Coming of the Dark Ages"
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # ============================================================
-# REGIÓN DE CAPTURA PARA OCR (relativa a la ventana del juego)
+# NOTA: La región de captura OCR se calcula automáticamente
+# según el DPI del sistema (ver hilo_detector_ocr.py)
 # ============================================================
-OCR_REGION = {
-    "left_offset": 10,     # Margen izquierdo desde la ventana
-    "top_offset": 90,     # Margen superior desde la ventana
-    "width": 160,       # Ancho de la región a capturar
-    "height": 15          # Alto de la región a capturar
-}
 
 # Umbral de similitud mínimo para considerar una coincidencia
 UMBRAL_SIMILITUD = 0.70
@@ -73,21 +68,6 @@ MOBS_OBJETIVO = [
     # "Zarku Rudhira (48)",
 
     # Agrega más mobs aquí...
-]
-
-# ============================================================
-# LISTA DE ITEMS DROP QUE QUIERO RECOGER
-# Agrega aquí los nombres de los items que deseas recoger
-# ============================================================
-DROP_ITEMS_OBJETIVO = [
-    # "Poison String",
-    # "Pinna",
-    # "Spara Panaka",
-    # "Spara Amrita",
-    # "Rupiah",
-    # "Toronja"
-
-    # Agrega más items aquí...
 ]
 
 # ============================================================
@@ -177,6 +157,32 @@ ESCAPE_BY_MOB = {
     # "Aganna Tara (39)": 13.0,
     # "Pizza Aganna (39)": 13.0,
     # "Kaulitara (41)": 13.0,
+}
+
+
+# ============================================================
+# CONTROL DE ÁREA - Mantiene al personaje dentro de un polígono
+# El minimapa está anclado a la esquina superior derecha
+# Coordenadas en formato "X / Y" (cuarto cuadrante del mapa)
+# NOTA: La región OCR de coordenadas es fija (ver hilo_control_area.py)
+# ============================================================
+CONTROL_AREA = {
+    "habilitado": False,
+    
+    # Polígono que define el área permitida (lista de puntos [X, Y])
+    # Los puntos deben formar un polígono cerrado en sentido horario o antihorario
+    # Ejemplo: cuadrado de farmeo
+    "poligono": [
+        [400, 600],   # Esquina superior izquierda
+        [520, 600],   # Esquina superior derecha
+        [520, 750],   # Esquina inferior derecha
+        [400, 750]    # Esquina inferior izquierda
+    ],
+    
+    # Intervalos de tiempo
+    "intervalo_lectura": 0.5,      # Segundos entre cada lectura de coordenadas
+    "intervalo_correccion": 0.2,   # Segundos entre intentos de corrección
+    "duracion_movimiento": 3.0,    # Segundos que se mantiene presionada la tecla
 }
 
 

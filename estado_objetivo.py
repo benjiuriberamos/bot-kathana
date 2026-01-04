@@ -60,6 +60,11 @@ class EstadoObjetivo:
             'similitud': 0.0,
             'timestamp_cambio': time.time(),
             'ejecutando_accion_loot': False,
+            # Control de área - posición del personaje
+            'pos_x': 0,
+            'pos_y': 0,
+            'pos_dentro_area': True,
+            'pos_actualizada': False,
         })
         
         # Control de procesos - por defecto todos activos
@@ -70,9 +75,10 @@ class EstadoObjetivo:
             'observador_objetivo': True,
             'mob_trabado': False,
             'recoger_drop': False,
+            'control_area': True, # Control de área siempre activo
         })
 
-        self._procesos_activos_default = ['autocuracion','detector_ocr']
+        self._procesos_activos_default = ['autocuracion','detector_ocr','control_area']
         
         # Lock para sincronización (ahora es multiprocessing.Lock)
         self._lock = multiprocessing.Lock()
@@ -267,6 +273,40 @@ class EstadoObjetivo:
         # Mover print fuera del lock para reducir tiempo de retención
         if cambio:
             print(f"[ESTADO] Objetivo: DROP - {nombre_coincidente} ({similitud*100:.1f}%)")
+    
+    # ============================================================
+    # Control de posición del personaje
+    # ============================================================
+    
+    def actualizar_posicion(self, x: int, y: int, dentro_area: bool):
+        """
+        Actualiza la posición actual del personaje.
+        
+        Args:
+            x: Coordenada X del mapa
+            y: Coordenada Y del mapa
+            dentro_area: Si está dentro del polígono
+        """
+        with self._lock:
+            self._estado['pos_x'] = x
+            self._estado['pos_y'] = y
+            self._estado['pos_dentro_area'] = dentro_area
+            self._estado['pos_actualizada'] = True
+    
+    def obtener_posicion(self) -> dict:
+        """
+        Obtiene la posición actual del personaje.
+        
+        Returns:
+            Diccionario con x, y, dentro_area, actualizada
+        """
+        with self._lock:
+            return {
+                'x': self._estado['pos_x'],
+                'y': self._estado['pos_y'],
+                'dentro_area': self._estado['pos_dentro_area'],
+                'actualizada': self._estado['pos_actualizada'],
+            }
     
     def obtener_info(self) -> dict:
         """

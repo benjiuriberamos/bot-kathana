@@ -17,8 +17,8 @@ from difflib import SequenceMatcher
 
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import (
-    TESSERACT_PATH, OCR_REGION, UMBRAL_SIMILITUD,
-    MOBS_OBJETIVO, DROP_ITEMS_OBJETIVO, VK_CODES
+    TESSERACT_PATH, UMBRAL_SIMILITUD,
+    MOBS_OBJETIVO, VK_CODES
 )
 
 # Configurar Tesseract (se actualizará dinámicamente)
@@ -28,6 +28,38 @@ def _configurar_tesseract():
     pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
 
 _configurar_tesseract()
+
+# ============================================================
+# CONSTANTES FIJAS DEL ÁREA DE CAPTURA OCR
+# Estas medidas son fijas porque el área del nombre del mob
+# siempre está en la misma posición dentro del juego
+# ============================================================
+OCR_LEFT_OFFSET = 5      # Margen izquierdo desde el borde de la ventana
+OCR_OFFSET_JUEGO = 60    # Distancia desde el contenido del juego hasta el nombre del mob
+OCR_WIDTH = 150          # Ancho del área de captura
+OCR_HEIGHT = 15          # Alto del área de captura
+
+def _obtener_altura_barra_titulo() -> int:
+    """
+    Obtiene la altura de la barra de título de Windows según el DPI del sistema.
+    Esto permite que el bot funcione correctamente en cualquier configuración de DPI.
+    
+    Returns:
+        Altura en píxeles de la barra de título + borde de la ventana
+    """
+    user32 = ctypes.windll.user32
+    SM_CYCAPTION = 4   # Altura del caption (título)
+    SM_CYFRAME = 33    # Altura del borde de la ventana
+    SM_CXPADDEDBORDER = 92  # Padding adicional en Windows 10/11
+    
+    altura_caption = user32.GetSystemMetrics(SM_CYCAPTION)
+    altura_frame = user32.GetSystemMetrics(SM_CYFRAME)
+    padding = user32.GetSystemMetrics(SM_CXPADDEDBORDER)
+    
+    return altura_caption + altura_frame + padding
+
+# Calcular el top_offset automáticamente
+OCR_TOP_OFFSET = _obtener_altura_barra_titulo() + OCR_OFFSET_JUEGO
 
 # Constantes para mensajes de teclado
 WM_KEYDOWN = 0x0100
@@ -73,18 +105,18 @@ class HiloDetectorOCR:
         """
         Captura la región de la ventana donde aparece la información del objetivo.
         Devuelve una imagen en formato numpy (OpenCV).
-        """
-        # Leer configuración dinámicamente desde el módulo
-        import configuracion
-        ocr_region = configuracion.OCR_REGION
         
+        La posición se calcula automáticamente:
+        - top_offset = altura_barra_titulo + offset_juego (calculado según DPI)
+        - left_offset, width, height son constantes fijas del juego
+        """
         rect = self._obtener_rect_ventana()
         
         region = {
-            "left": rect.left + ocr_region["left_offset"],
-            "top": rect.top + ocr_region["top_offset"],
-            "width": ocr_region["width"],
-            "height": ocr_region["height"]
+            "left": rect.left + OCR_LEFT_OFFSET,
+            "top": rect.top + OCR_TOP_OFFSET,
+            "width": OCR_WIDTH,
+            "height": OCR_HEIGHT
         }
         
         with mss.mss() as sct:
@@ -183,7 +215,6 @@ class HiloDetectorOCR:
         # Leer listas dinámicamente desde el módulo
         import configuracion
         mobs_objetivo = configuracion.MOBS_OBJETIVO
-        drop_items_objetivo = configuracion.DROP_ITEMS_OBJETIVO
         
         # Si el texto está vacío -> NULO
         if not texto_detectado or texto_detectado.strip() == "":
@@ -194,12 +225,6 @@ class HiloDetectorOCR:
         mob_encontrado, similitud_mob = self._buscar_en_lista(texto_detectado, mobs_objetivo)
         if mob_encontrado:
             estado.establecer_mob(texto_detectado, mob_encontrado, similitud_mob)
-            return
-        
-        # Buscar en la lista de drops
-        drop_encontrado, similitud_drop = self._buscar_en_lista(texto_detectado, drop_items_objetivo)
-        if drop_encontrado:
-            estado.establecer_drop(texto_detectado, drop_encontrado, similitud_drop)
             return
         
         # No coincide con nada -> NULO (objetivo desconocido)
@@ -278,9 +303,6 @@ if __name__ == "__main__":
         print(f"\n[INFO] Mobs configurados: {len(MOBS_OBJETIVO)}")
         for mob in MOBS_OBJETIVO:
             print(f"  - {mob}")
-        print(f"\n[INFO] Items drop configurados: {len(DROP_ITEMS_OBJETIVO)}")
-        for item in DROP_ITEMS_OBJETIVO:
-            print(f"  - {item}")
         print(f"\n[INFO] Umbral de similitud: {UMBRAL_SIMILITUD*100:.0f}%")
         
         # Iniciar detector

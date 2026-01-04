@@ -1,15 +1,8 @@
 {
     "GAME_WINDOW_TITLE": "Kathana - The Coming of the Dark Ages",
     "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
-    "OCR_REGION": {
-        "left_offset": 5,
-        "top_offset": 90,
-        "width": 150,
-        "height": 15
-    },
     "UMBRAL_SIMILITUD": 0.8,
     "MOBS_OBJETIVO": [
-        "Aganna Tara (39)",
         "Pizza Aganna (39)",
         "Kaulitara (41)",
         "Mangrian (50)",
@@ -19,7 +12,6 @@
         "Ulkamukha (21)",
         "Ulkamukha Caura (23)",
         "Ulkamukha Satvan (25)",
-        "Ananga (25)",
         "Visa Curni (27)",
         "Zinmmon (51)",
         "Zinmmon Gosu (55)",
@@ -32,11 +24,14 @@
         "Zaku (45)",
         "Zaku Gosu (45)",
         "Bongbo (76)",
-        "Baoku (74)"
+        "Baoku (74)",
+        "Aganna Tara (40)",
+        "Kyrukrong Gosu (68)",
+        "Kyrukrong (66)",
+        "Choniukusin (60)"
     ],
-    "DROP_ITEMS_OBJETIVO": [],
     "LOOT_DROP": {
-        "repeticiones_f": 2,
+        "repeticiones_f": 3,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {
@@ -70,28 +65,43 @@
         },
         "8": {
             "active": false,
-            "time": 40.0
+            "time": 1.0
         },
         "F": {
             "active": false,
             "time": 1.0
         },
         "R": {
-            "active": true,
+            "active": false,
             "time": 0.5
         }
     },
     "AUTOCURACION": {
         "vida": {
-            "x": 140,
-            "y": 62,
-            "tecla": [
-                "0",
-                "7",
-                "4"
+            "niveles": [
+                {
+                    "nombre": "Vida Media",
+                    "x": 120,
+                    "y": 62,
+                    "teclas": [
+                        "4",
+                        "7"
+                    ],
+                    "intervalo_sin": 0.5
+                },
+                {
+                    "nombre": "Vida Baja",
+                    "x": 50,
+                    "y": 62,
+                    "teclas": [
+                        "0",
+                        "7",
+                        "4"
+                    ],
+                    "intervalo_sin": 0.3
+                }
             ],
-            "intervalo_con": 1.0,
-            "intervalo_sin": 0.5
+            "intervalo_con": 1.0
         },
         "mana": {
             "x": 45,
@@ -139,6 +149,93 @@
         "Zinkiu Gosu (58)": 25.0,
         "Mangrian (50)": 15.0,
         "Kyoin (48)": 15.0,
-        "Sinkiu Gosu (58)": 25.0
+        "Sinkiu Gosu (58)": 25.0,
+        "Bongbo (76)": 30.0,
+        "Baoku (74)": 30.0,
+        "Choniukusin (60)": 5.0
+    },
+    "CONTROL_AREA": {
+        "habilitado": true,
+        "poligono": [
+            [
+                240,
+                601
+            ],
+            [
+                292,
+                556
+            ],
+            [
+                293,
+                558
+            ],
+            [
+                285,
+                571
+            ],
+            [
+                311,
+                578
+            ],
+            [
+                319,
+                570
+            ],
+            [
+                322,
+                560
+            ],
+            [
+                344,
+                557
+            ],
+            [
+                358,
+                524
+            ],
+            [
+                379,
+                479
+            ],
+            [
+                327,
+                432
+            ],
+            [
+                283,
+                419
+            ],
+            [
+                207,
+                334
+            ],
+            [
+                163,
+                320
+            ],
+            [
+                62,
+                334
+            ],
+            [
+                71,
+                412
+            ],
+            [
+                137,
+                451
+            ],
+            [
+                66,
+                613
+            ],
+            [
+                118,
+                621
+            ]
+        ],
+        "intervalo_lectura": 0.5,
+        "intervalo_correccion": 0.2,
+        "duracion_movimiento": 3.0
     }
 }
