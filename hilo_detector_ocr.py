@@ -237,7 +237,7 @@ class HiloDetectorOCR:
         while self.ejecutando:
             # Verificar si este hilo está activo
             if not estado.hilo_activo('detector_ocr'):
-                time.sleep(0.1)
+                time.sleep(0.3)
                 continue
             
             try:
@@ -265,6 +265,22 @@ class HiloDetectorOCR:
             time.sleep(self.intervalo)
         
         print("[DETECTOR OCR] Hilo detenido")
+
+
+    def _aplicar_deteccion(self) -> None:
+        # 2. Capturar la región del objetivo
+        captura = self._capturar_region_objetivo()
+        
+        # 3. Extraer texto con OCR
+        texto = self._extraer_texto(captura)
+        print("texto escaneado: ", texto)
+        
+        # 4. Obtener primera línea (nombre del objetivo)
+        lineas = texto.split('\n')
+        nombre = lineas[0].strip() if lineas else ""
+        
+        # 5. Clasificar y actualizar estado
+        self._clasificar_objetivo(nombre)
     
     def iniciar(self) -> None:
         """Inicia el hilo detector."""

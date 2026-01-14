@@ -442,7 +442,7 @@ class HiloControlArea:
         
         # Centro + 3% más abajo
         centro_x = ancho // 2
-        centro_y = (alto // 2) + int(alto * 0.03)
+        centro_y = (alto // 2) + int(alto * 0.04)
         
         # Constantes para click izquierdo
         WM_LBUTTONDOWN = 0x0201
@@ -584,11 +584,8 @@ class HiloControlArea:
                         self.fuera_de_area = True
                         
                         # Pausar hilos de combate (habilidades, mob_trabado, observador_objetivo)
-                        # Solo quedan activos: autocuración, detector_ocr y control_area
+                        # Los hilos default (autocuración, detector_ocr, control_area) se mantienen activos
                         estado.pausar_todos_los_hilos()
-                        estado.activar_hilo('autocuracion')
-                        estado.activar_hilo('detector_ocr')
-                        estado.activar_hilo('control_area')
                         
                         # 1. Click izquierdo para deseleccionar el objetivo (centro +3% abajo)
                         self._click_deseleccionar()
@@ -599,6 +596,8 @@ class HiloControlArea:
                         time.sleep(0.1)
                         
                         # 3. Click izquierdo arriba (centro -10% arriba)
+                        self._click_centro_arriba()
+                        time.sleep(0.2)
                         self._click_centro_arriba()
                         time.sleep(0.2)
                     

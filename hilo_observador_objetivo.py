@@ -12,6 +12,7 @@ import threading
 
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import VK_CODES, OBSERVADOR_OBJETIVO
+from hilo_detector_ocr import HiloDetectorOCR
 
 # Cargar DLL de Windows
 user32 = ctypes.windll.user32
@@ -36,6 +37,8 @@ class HiloObservadorObjetivo:
         self.hwnd = hwnd
         self.ejecutando = False
         self.thread = None
+        self.hilo_detector_ocr = HiloDetectorOCR(self.hwnd)
+
         # No copiar valores, leer dinámicamente desde el módulo
     
     def _presionar_tecla_para_seleccionar(self) -> None:
@@ -72,26 +75,25 @@ class HiloObservadorObjetivo:
             # Obtener toda la información una vez por ciclo
             info = estado.obtener_info()
             tipo_actual = info['tipo']
-            tiempo_en_estado = info['tiempo_en_estado']
+
             
+        
             if tipo_actual == TipoObjetivo.NULO:
                 # Sin objetivo -> presionar E
                 self._presionar_tecla_para_seleccionar()
-                time.sleep(0.5)  # Esperar un poco antes de volver a intentar
+                self.hilo_detector_ocr._aplicar_deteccion()
+                estado.desactivar_hilo('detector_ocr')
+
+                time.sleep(0.2)  # Esperar un poco antes de volver a intentar
                 
             elif tipo_actual in [TipoObjetivo.MOB, TipoObjetivo.DROP]:
                 estado.pausar_todos_los_hilos_excepto('habilidades')
                 estado.activar_hilo('recoger_drop')
                 estado.activar_hilo('mob_trabado')
+                estado.activar_hilo('detector_ocr')
                 # Tenemos un mob -> no hacer nada
                 pass
                 
-                # Tenemos un drop
-                # if tiempo_en_estado >= timeout_drop:
-                #     # Lleva más de X segundos en DROP -> presionar E
-                #     print(f"[OBSERVADOR] DROP por {tiempo_en_estado:.1f}s (> {timeout_drop}s) -> Presionando E")
-                #     self._presionar_tecla_para_seleccionar()
-                #     time.sleep(1.5)
             
             time.sleep(intervalo)
         

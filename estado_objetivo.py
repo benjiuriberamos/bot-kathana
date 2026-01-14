@@ -78,7 +78,8 @@ class EstadoObjetivo:
             'control_area': True, # Control de área siempre activo
         })
 
-        self._procesos_activos_default = ['autocuracion','detector_ocr','control_area']
+        #self._procesos_activos_default = ['autocuracion','detector_ocr','control_area']
+        self._procesos_activos_default = ['autocuracion','control_area']
         
         # Lock para sincronización (ahora es multiprocessing.Lock)
         self._lock = multiprocessing.Lock()
@@ -105,17 +106,24 @@ class EstadoObjetivo:
             self._procesos_activos[nombre_hilo] = True
             print(f"[ESTADO] ▶️  Proceso {nombre_hilo} ACTIVADO")
 
+    def desactivar_hilo(self, nombre_hilo: str):
+        """Activa un proceso."""
+        with self._lock:
+            self._procesos_activos[nombre_hilo] = False
+            print(f"[ESTADO] ▶️  Proceso {nombre_hilo} ACTIVADO")
+
     def hilo_activo(self, nombre_hilo: str) -> bool:
         """Verifica si un proceso está activo."""
         with self._lock:
             return self._procesos_activos.get(nombre_hilo, True)
     
     def pausar_todos_los_hilos(self):
-        """Pausa todos los procesos."""
+        """Pausa todos los procesos excepto los default (autocuración, detector_ocr, control_area)."""
         with self._lock:
             for proceso in self._procesos_activos:
-                self._procesos_activos[proceso] = False
-            print("[ESTADO] ⏸️  Todos los procesos PAUSADOS")
+                if proceso not in self._procesos_activos_default:
+                    self._procesos_activos[proceso] = False
+            print("[ESTADO] ⏸️  Procesos de combate PAUSADOS (mantiene: autocuración, detector_ocr, control_area)")
     
     def reactivar_todos_los_hilos(self):
         """Reactiva todos los procesos."""
@@ -237,15 +245,14 @@ class EstadoObjetivo:
             nombre_coincidente: Nombre del mob de la lista
             similitud: Porcentaje de similitud (0-1)
         """
-        with self._lock:
-            cambio = self._estado['tipo'] != TipoObjetivo.MOB.value or self._estado['nombre_coincidente'] != nombre_coincidente
-            if cambio:
-                self._estado['tipo_anterior'] = self._estado['tipo']
-                self._estado['timestamp_cambio'] = time.time()
-            self._estado['tipo'] = TipoObjetivo.MOB.value
-            self._estado['nombre'] = nombre_detectado or ''
-            self._estado['nombre_coincidente'] = nombre_coincidente or ''
-            self._estado['similitud'] = similitud
+        cambio = self._estado['tipo'] != TipoObjetivo.MOB.value or self._estado['nombre_coincidente'] != nombre_coincidente
+        if cambio:
+            self._estado['tipo_anterior'] = self._estado['tipo']
+            self._estado['timestamp_cambio'] = time.time()
+        self._estado['tipo'] = TipoObjetivo.MOB.value
+        self._estado['nombre'] = nombre_detectado or ''
+        self._estado['nombre_coincidente'] = nombre_coincidente or ''
+        self._estado['similitud'] = similitud
         
         # Mover print fuera del lock para reducir tiempo de retención
         if cambio:

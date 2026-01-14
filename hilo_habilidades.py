@@ -104,8 +104,8 @@ class HiloHabilidades:
             # Esto evita atacar mobs que no están en la lista
             if tipo_actual in (TipoObjetivo.MOB, TipoObjetivo.DROP) and nombre_coincidente:
                 # Si es MOB, también atacar con R
-                if tipo_actual == TipoObjetivo.MOB:
-                    self._presionar_r_atacar()
+                #if tipo_actual == TipoObjetivo.MOB:
+                    # self._presionar_r_atacar()
                 
                 # Leer configuración dinámicamente desde el módulo
                 import configuracion
