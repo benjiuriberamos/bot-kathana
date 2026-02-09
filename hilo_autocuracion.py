@@ -203,7 +203,10 @@ class HiloAutocuracion:
             # Leer configuración dinámicamente desde el módulo
             import configuracion
             config_vida = configuracion.AUTOCURACION['vida']
-            
+
+            if 'niveles' in config_vida:
+                config_vida['niveles'] = sorted(config_vida['niveles'], key=lambda n: n['x'])
+
             # Verificar si este hilo está activo
             if not estado.hilo_activo('autocuracion'):
                 time.sleep(0.1)
@@ -219,13 +222,13 @@ class HiloAutocuracion:
                     
                     if not tiene_vida:
                         vida_ok = False
-                        tipo_actual = estado.tipo
+                        # tipo_actual = estado.tipo
                         print(f"[VIDA] {nivel['nombre']} | Sin vida en ({nivel['x']}, {nivel['y']}) | Color: RGB{color} | Presionando '{nivel['teclas']}'")
                         
                         for tecla in nivel['teclas']:
                             # Solo presionar teclas distintas de '0' si estamos en combate
-                            if tipo_actual != TipoObjetivo.MOB and tecla != '0':
-                                continue
+                            # if tipo_actual != TipoObjetivo.MOB and tecla != '0':
+                            #     continue
                             self._presionar_tecla(tecla)
                         
                         time.sleep(nivel.get('intervalo_sin', 0.5))
@@ -233,22 +236,22 @@ class HiloAutocuracion:
                 
                 if vida_ok:
                     time.sleep(config_vida.get('intervalo_con', 1.0))
-            else:
-                # Configuración antigua (compatibilidad hacia atrás)
-                config = config_vida
-                tiene_vida, color = self._tiene_vida(config['x'], config['y'])
+            # else:
+            #     # Configuración antigua (compatibilidad hacia atrás)
+            #     config = config_vida
+            #     tiene_vida, color = self._tiene_vida(config['x'], config['y'])
                 
-                if tiene_vida:
-                    time.sleep(config['intervalo_con'])
-                else:
-                    tipo_actual = estado.tipo
-                    teclas = config['tecla'] if isinstance(config['tecla'], list) else [config['tecla']]
-                    print(f"[VIDA] Sin vida | Color: RGB{color} | Presionando '{teclas}'")
-                    for tecla in teclas:
-                        if tipo_actual != TipoObjetivo.MOB and tecla != '0':
-                            continue
-                        self._presionar_tecla(tecla)
-                    time.sleep(config['intervalo_sin'])
+            #     if tiene_vida:
+            #         time.sleep(config['intervalo_con'])
+            #     else:
+            #         tipo_actual = estado.tipo
+            #         teclas = config['tecla'] if isinstance(config['tecla'], list) else [config['tecla']]
+            #         print(f"[VIDA] Sin vida | Color: RGB{color} | Presionando '{teclas}'")
+            #         for tecla in teclas:
+            #             if tipo_actual != TipoObjetivo.MOB and tecla != '0':
+            #                 continue
+            #             self._presionar_tecla(tecla)
+            #         time.sleep(config['intervalo_sin'])
         
         print("[AUTOCURACIÓN] Hilo de vida detenido")
     

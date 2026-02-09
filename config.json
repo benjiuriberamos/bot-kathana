@@ -11,8 +11,6 @@
         "Ulkamukha Caura (23)",
         "Ulkamukha Satvan (25)",
         "Visa Curni (27)",
-        "Zinmmon (51)",
-        "Zinmmon Gosu (55)",
         "Sinkiu (53)",
         "Sinkiu Gosu (58)",
         "Nagamudra (52)",
@@ -25,7 +23,6 @@
         "Kyrukrong Gosu (68)",
         "Kyrukrong (66)",
         "Choniukusin (60)",
-        "Kubasang (58)",
         "Mangriang (50)",
         "Kemsa Tonyo (80)",
         "Dogurpaso (75)",
@@ -37,13 +34,11 @@
         "Tarantula Zuzu (37)",
         "Dae Mi (70)",
         "Sik Chu (70)",
-        "Sobariung Gosu (56)",
-        "Sobariung (54)",
-        "Ban (50)",
-        "Ban Gosu (52)"
+        "Zonbu (72)",
+        "Bora (88)"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 2,
+        "repeticiones_f": 0,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {
@@ -64,7 +59,7 @@
             "time": 0.2
         },
         "5": {
-            "active": true,
+            "active": false,
             "time": 0.2
         },
         "6": {
@@ -73,7 +68,7 @@
         },
         "7": {
             "active": false,
-            "time": 15.0
+            "time": 1.0
         },
         "8": {
             "active": false,
@@ -84,7 +79,7 @@
             "time": 1.0
         },
         "R": {
-            "active": false,
+            "active": true,
             "time": 0.5
         }
     },
@@ -93,7 +88,7 @@
             "niveles": [
                 {
                     "nombre": "Vida Media",
-                    "x": 160,
+                    "x": 150,
                     "y": 62,
                     "teclas": [
                         "4",
@@ -109,7 +104,7 @@
                     "teclas": [
                         "4",
                         "7",
-                        "0"
+                        "8"
                     ],
                     "intervalo_sin": 0.3
                 }
@@ -131,7 +126,7 @@
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 20.0,
+        "timeout_mob": 40.0,
         "punto_click_primero": {
             "x": 405,
             "y": 360
@@ -164,8 +159,7 @@
         "Kyoin (48)": 15.0,
         "Sinkiu Gosu (58)": 25.0,
         "Bongbo (76)": 30.0,
-        "Baoku (74)": 30.0,
-        "Choniukusin (60)": 5.0
+        "Baoku (74)": 30.0
     },
     "CONTROL_AREA": {
         "habilitado": false,

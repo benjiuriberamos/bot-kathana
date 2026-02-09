@@ -98,10 +98,10 @@ class HiloMobTrabado:
 
         
 
-        print(f"[ESCAPE] Clic en ({punto_click_primero["x"]}, {punto_click_primero["y"]})")
+        #print(f"[ESCAPE] Clic en ({punto_click_primero["x"]}, {punto_click_primero["y"]})")
         for i in range(veces):
             self._hacer_clic(click_x, click_y)
-            print(f"[ESCAPE] Clic en ({click_x}, {click_y}) - ({i+1}/{veces})")
+            #print(f"[ESCAPE] Clic en ({click_x}, {click_y}) - ({i+1}/{veces})")
             if i < veces - 1:
                 time.sleep(intervalo)
 

@@ -322,7 +322,7 @@ class AutocuracionTab(QWidget):
         vida_layout.addLayout(hbox_intervalo)
         
         # Nota explicativa
-        nota = QLabel("Cada nivel verifica un píxel. Si no hay vida, ejecuta las teclas de ese nivel.")
+        nota = QLabel("Cada nivel verifica un píxel. Si no hay vida, ejecuta las teclas de ese nivel. en x puedes poner entre 10 y160")
         nota.setStyleSheet("color: gray; font-style: italic;")
         vida_layout.addWidget(nota)
         
