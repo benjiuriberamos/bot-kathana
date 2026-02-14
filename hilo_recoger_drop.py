@@ -67,7 +67,8 @@ class HiloRecogerDrop:
         estado.pausar_todos_los_hilos()
 
         # Leer configuración dinámicamente desde el módulo
-        config_loot = LOOT_DROP
+        import configuracion
+        config_loot = configuracion.LOOT_DROP
         repeticiones = max(0, int(config_loot.get('repeticiones_f', 0)))
         intervalo = float(config_loot.get('intervalo_f', 0.5))
 

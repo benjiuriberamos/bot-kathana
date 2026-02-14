@@ -35,16 +35,18 @@
         "Dae Mi (70)",
         "Sik Chu (70)",
         "Zonbu (72)",
-        "Bora (88)"
+        "Bora (88)",
+        "Ban Zangkun (70)",
+        "Ban Dopang (75)"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 0,
+        "repeticiones_f": 1,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {
         "1": {
             "active": false,
-            "time": 0.2
+            "time": 1.0
         },
         "2": {
             "active": true,
@@ -88,7 +90,7 @@
             "niveles": [
                 {
                     "nombre": "Vida Media",
-                    "x": 150,
+                    "x": 120,
                     "y": 62,
                     "teclas": [
                         "4",
@@ -99,14 +101,33 @@
                 },
                 {
                     "nombre": "Vida Baja",
-                    "x": 120,
+                    "x": 80,
+                    "y": 62,
+                    "teclas": [
+                        "4",
+                        "7"
+                    ],
+                    "intervalo_sin": 0.3
+                },
+                {
+                    "nombre": "Nivel 3",
+                    "x": 67,
                     "y": 62,
                     "teclas": [
                         "4",
                         "7",
                         "8"
                     ],
-                    "intervalo_sin": 0.3
+                    "intervalo_sin": 0.5
+                },
+                {
+                    "nombre": "Nivel 4",
+                    "x": 160,
+                    "y": 62,
+                    "teclas": [
+                        "4"
+                    ],
+                    "intervalo_sin": 0.5
                 }
             ],
             "intervalo_con": 1.0
@@ -120,13 +141,13 @@
         }
     },
     "OBSERVADOR_OBJETIVO": {
-        "tecla_seleccionar": "E",
+        "tecla_seleccionar": "1",
         "timeout_drop": 3.0,
         "intervalo_revision": 0.1
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 40.0,
+        "timeout_mob": 15.0,
         "punto_click_primero": {
             "x": 405,
             "y": 360
@@ -159,7 +180,10 @@
         "Kyoin (48)": 15.0,
         "Sinkiu Gosu (58)": 25.0,
         "Bongbo (76)": 30.0,
-        "Baoku (74)": 30.0
+        "Baoku (74)": 30.0,
+        "Guryasu (75)": 25.0,
+        "Guryasu (70)": 12.0,
+        "Pitton (75)": 12.0
     },
     "CONTROL_AREA": {
         "habilitado": false,

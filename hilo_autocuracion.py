@@ -93,24 +93,34 @@ class HiloAutocuracion:
         user32.GetWindowRect(self.hwnd, ctypes.byref(rect))
         return rect
     
-    def _obtener_color_pixel(self, x_relativo: int, y_relativo: int) -> Tuple[int, int, int]:
+    def _obtener_color_pixel(self, x_relativo: int, y_relativo: int, hdc=None, rect=None) -> Tuple[int, int, int]:
         """
         Obtiene el color RGB de un píxel en coordenadas relativas a la ventana.
         
         Args:
             x_relativo: Coordenada X relativa a la ventana
             y_relativo: Coordenada Y relativa a la ventana
+            hdc: Handle de contexto de dispositivo (opcional)
+            rect: Rectángulo de la ventana (opcional)
             
         Returns:
             Tupla (R, G, B)
         """
-        rect = self._obtener_rect_ventana()
+        if rect is None:
+            rect = self._obtener_rect_ventana()
+            
         x_absoluto = rect.left + x_relativo
         y_absoluto = rect.top + y_relativo
         
-        hdc = user32.GetDC(0)
+        release_dc = False
+        if hdc is None:
+            hdc = user32.GetDC(0)
+            release_dc = True
+            
         color = self.gdi32.GetPixel(hdc, x_absoluto, y_absoluto)
-        user32.ReleaseDC(0, hdc)
+        
+        if release_dc:
+            user32.ReleaseDC(0, hdc)
         
         r = color & 0xFF
         g = (color >> 8) & 0xFF
@@ -138,14 +148,14 @@ class HiloAutocuracion:
         time.sleep(0.05)
         user32.PostMessageW(self.hwnd, WM_KEYUP, vk_code, 0)
     
-    def _tiene_vida(self, x: int, y: int) -> Tuple[bool, Tuple[int, int, int]]:
+    def _tiene_vida(self, x: int, y: int, hdc=None, rect=None) -> Tuple[bool, Tuple[int, int, int]]:
         """
         Verifica si hay vida en la posición indicada.
         
         Returns:
             Tupla (tiene_vida, color_detectado)
         """
-        color = self._obtener_color_pixel(x, y)
+        color = self._obtener_color_pixel(x, y, hdc, rect)
         r, g, b = color
         
         # Verificar contra colores conocidos
@@ -217,22 +227,30 @@ class HiloAutocuracion:
                 # Nueva configuración con múltiples niveles
                 vida_ok = True
                 
-                for nivel in config_vida['niveles']:
-                    tiene_vida, color = self._tiene_vida(nivel['x'], nivel['y'])
+                # Obtener contexto una sola vez para todos los niveles
+                try:
+                    hdc = user32.GetDC(0)
+                    rect = self._obtener_rect_ventana()
                     
-                    if not tiene_vida:
-                        vida_ok = False
-                        # tipo_actual = estado.tipo
-                        print(f"[VIDA] {nivel['nombre']} | Sin vida en ({nivel['x']}, {nivel['y']}) | Color: RGB{color} | Presionando '{nivel['teclas']}'")
+                    for nivel in config_vida['niveles']:
+                        tiene_vida, color = self._tiene_vida(nivel['x'], nivel['y'], hdc=hdc, rect=rect)
                         
-                        for tecla in nivel['teclas']:
-                            # Solo presionar teclas distintas de '0' si estamos en combate
-                            # if tipo_actual != TipoObjetivo.MOB and tecla != '0':
-                            #     continue
-                            self._presionar_tecla(tecla)
-                        
-                        time.sleep(nivel.get('intervalo_sin', 0.5))
-                        break  # Procesar solo el primer nivel que falle
+                        if not tiene_vida:
+                            vida_ok = False
+                            # tipo_actual = estado.tipo
+                            print(f"[VIDA] {nivel['nombre']} | Sin vida en ({nivel['x']}, {nivel['y']}) | Color: RGB{color} | Presionando '{nivel['teclas']}'")
+                            
+                            for tecla in nivel['teclas']:
+                                # Solo presionar teclas distintas de '0' si estamos en combate
+                                # if tipo_actual != TipoObjetivo.MOB and tecla != '0':
+                                #     continue
+                                self._presionar_tecla(tecla)
+                            
+                            time.sleep(nivel.get('intervalo_sin', 0.5))
+                            break  # Procesar solo el primer nivel que falle
+                            
+                finally:
+                    user32.ReleaseDC(0, hdc)
                 
                 if vida_ok:
                     time.sleep(config_vida.get('intervalo_con', 1.0))
