@@ -13,6 +13,7 @@ import mss
 import pytesseract
 import cv2
 import numpy as np
+import re
 from difflib import SequenceMatcher
 
 from estado_objetivo import estado, TipoObjetivo
@@ -39,6 +40,15 @@ OCR_OFFSET_JUEGO = 60    # Distancia desde el contenido del juego hasta el nombr
 OCR_WIDTH = 150          # Ancho del área de captura
 OCR_HEIGHT = 15          # Alto del área de captura
 
+# ============================================================
+# CONSTANTES CONFIGURABLES PARA OCR DE VIDA
+# NOTA: Ajustar estos valores según la posición real de la barra de vida en el juego
+# ============================================================
+OCR_VIDA_LEFT_OFFSET = 5   # Distancia horizontal hacia la barra de vida
+OCR_VIDA_OFFSET_JUEGO = 80  # Distancia vertical hacia la barra de vida 
+OCR_VIDA_WIDTH = 150        # Ancho para abarcar "1500/1500"
+OCR_VIDA_HEIGHT = 12        # Alto para el texto
+
 def _obtener_altura_barra_titulo() -> int:
     """
     Obtiene la altura de la barra de título de Windows según el DPI del sistema.
@@ -60,6 +70,7 @@ def _obtener_altura_barra_titulo() -> int:
 
 # Calcular el top_offset automáticamente
 OCR_TOP_OFFSET = _obtener_altura_barra_titulo() + OCR_OFFSET_JUEGO
+OCR_VIDA_TOP_OFFSET = _obtener_altura_barra_titulo() + OCR_VIDA_OFFSET_JUEGO
 
 # Constantes para mensajes de teclado
 WM_KEYDOWN = 0x0100
@@ -128,6 +139,28 @@ class HiloDetectorOCR:
             # cv2.imwrite("debug_captura_raw.png", img)
         
         return img
+
+    def _capturar_region_vida(self) -> np.ndarray:
+        """
+        Captura la región de la ventana donde debería estar la barra de vida (XX/YY).
+        Devuelve la imagen en formato numpy.
+        """
+        rect = self._obtener_rect_ventana()
+        
+        region = {
+            "left": rect.left + OCR_VIDA_LEFT_OFFSET,
+            "top": rect.top + OCR_VIDA_TOP_OFFSET,
+            "width": OCR_VIDA_WIDTH,
+            "height": OCR_VIDA_HEIGHT
+        }
+        
+        with mss.mss() as sct:
+            img = np.array(sct.grab(region))
+            
+            # [DEBUG] Guardar la imagen original para poder calibrar coordenadas.
+            cv2.imwrite("debug_vida_raw.png", img)
+        
+        return img
     
     def _procesar_imagen_para_ocr(self, imagen: np.ndarray) -> np.ndarray:
         """
@@ -161,6 +194,49 @@ class HiloDetectorOCR:
         config_tesseract = '--psm 7 --oem 3 -l eng'
         texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
         return texto.strip()
+    
+    def _extraer_texto_vida(self, imagen: np.ndarray) -> str:
+        """Usa OCR para extraer SOLO el texto de vida (números y slash)."""
+        imagen_procesada = self._procesar_imagen_para_ocr(imagen)
+        
+        # [DEBUG] Guardar imagen en blanco y negro para ver con qué calidad va a leer el OCR
+        cv2.imwrite("debug_vida_proc.png", imagen_procesada)
+        
+        # Whitelist para optimizar detección solo a números y /
+        config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789/'
+        texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
+        print(f"[OCR] Texto de vida: {texto}")
+        return texto.strip()
+
+    def _parsear_vida(self, texto_vida: str) -> tuple:
+        """Extrae vida_actual y vida_maxima. Retorna (actual, max)."""
+        # Expresión regular para buscar el patrón numero/numero (ej: 1500/1500)
+        coincidencia = re.search(r"(\d+)/(\d+)", texto_vida)
+        if coincidencia:
+            return int(coincidencia.group(1)), int(coincidencia.group(2))
+        return 0, 0
+        
+    def _es_mob_elite(self, nombre_mob: str, vida_maxima: int) -> bool:
+        """
+        Determina si un mob es élite basándose en su vida máxima.
+        NOTA: Aquí puedes personalizar la lógica.
+        """
+        if vida_maxima == 0:
+            return False # Falló el OCR de vida, no se asume élite
+            
+        import configuracion
+        escape_by_mob = getattr(configuracion, 'ESCAPE_BY_MOB', {})
+        
+        # Verificar si hay vida normal configurada para este mob
+        if nombre_mob in escape_by_mob and isinstance(escape_by_mob[nombre_mob], dict):
+            vida_normal = escape_by_mob[nombre_mob].get('vida', 0)
+            if vida_normal > 0:
+                # Si la vida máxima excede la vida normal configurada es élite
+                return vida_maxima > vida_normal
+        
+        # Ejemplo: Si la vida máxima supera cierto umbral, lo consideramos de élite
+        
+        return False
     
     def _calcular_similitud(self, texto1: str, texto2: str) -> float:
         """Calcula la similitud entre dos cadenas de texto."""
@@ -224,7 +300,23 @@ class HiloDetectorOCR:
         # Buscar en la lista de mobs
         mob_encontrado, similitud_mob = self._buscar_en_lista(texto_detectado, mobs_objetivo)
         if mob_encontrado:
-            estado.establecer_mob(texto_detectado, mob_encontrado, similitud_mob)
+            # 1. Capturar región secundaria de vida
+            captura_vida = self._capturar_region_vida()
+            texto_vida = self._extraer_texto_vida(captura_vida)
+            
+            # 2. Parsear formato "1500/1500"
+            vida_actual, vida_maxima = self._parsear_vida(texto_vida)
+            
+            # 3. Determinar el nuevo estado "Es Elite"
+            es_elite = self._es_mob_elite(mob_encontrado, vida_maxima)
+            
+            # 4. Establecer en la clase singleton el objetivo con todos sus datos
+            estado.establecer_mob(
+                nombre_detectado=texto_detectado, 
+                nombre_coincidente=mob_encontrado, 
+                similitud=similitud_mob,
+                es_elite=es_elite
+            )
             return
         
         # No coincide con nada -> NULO (objetivo desconocido)
@@ -332,9 +424,11 @@ if __name__ == "__main__":
         # Mantener corriendo
         while True:
             info = estado.obtener_info()
-            print(f"[STATUS] Tipo: {info['tipo'].value} | "
-                  f"Nombre: {info['nombre_coincidente'] or 'N/A'} | "
-                  f"Tiempo: {info['tiempo_en_estado']:.1f}s", end='\r')
+            tag_elite = " [ELITE]" if info.get('es_elite') else ""
+            print(f"[STATUS] Tipo: {info['tipo'].value}{tag_elite} | "
+                  f"Nombre: {info['nombre_coincidente'] or 'N/A'} "
+                  f"HP: {info.get('vida_actual',0)}/{info.get('vida_maxima',0)} | "
+                  f"Tiempo: {info['tiempo_en_estado']:.1f}s          ", end='\r')
             time.sleep(0.5)
             
     except KeyboardInterrupt:

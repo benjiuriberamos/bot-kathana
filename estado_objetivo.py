@@ -58,6 +58,7 @@ class EstadoObjetivo:
             'nombre': '',
             'nombre_coincidente': '',
             'similitud': 0.0,
+            'es_elite': False,
             'timestamp_cambio': time.time(),
             'ejecutando_accion_loot': False,
             # Control de área - posición del personaje
@@ -181,6 +182,11 @@ class EstadoObjetivo:
         return self._estado['similitud']
     
     @property
+    def es_elite(self) -> bool:
+        """Retorna True si el objetivo actual es de tipo élite."""
+        return self._estado.get('es_elite', False)
+    
+    @property
     def timestamp_cambio(self) -> float:
         """Retorna el timestamp del último cambio de estado."""
         return self._estado['timestamp_cambio']
@@ -227,6 +233,7 @@ class EstadoObjetivo:
             self._estado['nombre'] = ''
             self._estado['nombre_coincidente'] = ''
             self._estado['similitud'] = 0.0
+            self._estado['es_elite'] = False
         
         # Mover print fuera del lock para reducir tiempo de retención
         if transicion_mob_a_nulo:
@@ -236,7 +243,7 @@ class EstadoObjetivo:
         
         return transicion_mob_a_nulo
     
-    def establecer_mob(self, nombre_detectado: str, nombre_coincidente: str, similitud: float):
+    def establecer_mob(self, nombre_detectado: str, nombre_coincidente: str, similitud: float, es_elite: bool = False):
         """
         Establece que el objetivo es un mob.
         
@@ -244,6 +251,7 @@ class EstadoObjetivo:
             nombre_detectado: Nombre detectado por OCR
             nombre_coincidente: Nombre del mob de la lista
             similitud: Porcentaje de similitud (0-1)
+            es_elite: Indica si es un mob de tipo élite
         """
         cambio = self._estado['tipo'] != TipoObjetivo.MOB.value or self._estado['nombre_coincidente'] != nombre_coincidente
         if cambio:
@@ -253,10 +261,12 @@ class EstadoObjetivo:
         self._estado['nombre'] = nombre_detectado or ''
         self._estado['nombre_coincidente'] = nombre_coincidente or ''
         self._estado['similitud'] = similitud
+        self._estado['es_elite'] = es_elite
         
         # Mover print fuera del lock para reducir tiempo de retención
         if cambio:
-            print(f"[ESTADO] Objetivo: MOB - {nombre_coincidente} ({similitud*100:.1f}%)")
+            etiqueta = "[ELITE] " if es_elite else ""
+            print(f"[ESTADO] Objetivo: {etiqueta}MOB - {nombre_coincidente} ({similitud*100:.1f}%)")
     
     def establecer_drop(self, nombre_detectado: str, nombre_coincidente: str, similitud: float):
         """
@@ -331,6 +341,7 @@ class EstadoObjetivo:
                 'nombre': self._estado['nombre'] if self._estado['nombre'] else None,
                 'nombre_coincidente': self._estado['nombre_coincidente'] if self._estado['nombre_coincidente'] else None,
                 'similitud': self._estado['similitud'],
+                'es_elite': self._estado.get('es_elite', False),
                 'tiempo_en_estado': tiempo_actual - self._estado['timestamp_cambio'],
                 'ejecutando_loot': self._estado['ejecutando_accion_loot'],
             }

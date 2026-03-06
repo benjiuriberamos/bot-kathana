@@ -147,8 +147,14 @@ class HiloMobTrabado:
             return False
 
         #El escape depende de con qué mob estes peleando
-        #si es fuerte demora más, si es debil demora menos
-        tiempo_escape = escape_by_mob.get(nombre_actual, escape_mob["timeout_mob"])
+        escape_config = escape_by_mob.get(nombre_actual)
+        tiempo_escape = escape_mob["timeout_mob"]
+        
+        if escape_config is not None:
+            if isinstance(escape_config, dict):
+                tiempo_escape = escape_config.get("tiempo_escape_elite", escape_config.get("timeout", tiempo_escape)) if estado.es_elite else escape_config.get("timeout", tiempo_escape)
+            else:
+                tiempo_escape = escape_config
         
         if tiempo_en_estado >= tiempo_escape:
             self._escape_ejecutado_para_mob = nombre_actual
@@ -185,7 +191,15 @@ class HiloMobTrabado:
                     estado.pausar_todos_los_hilos_excepto('observador_objetivo')
                 
                 nombre_actual = info['nombre_coincidente']
-                tiempo_escape = escape_by_mob.get(nombre_actual, escape_mob["timeout_mob"])
+                escape_config = escape_by_mob.get(nombre_actual)
+                tiempo_escape = escape_mob["timeout_mob"]
+                
+                if escape_config is not None:
+                    if isinstance(escape_config, dict):
+                        tiempo_escape = escape_config.get("tiempo_escape_elite", escape_config.get("timeout", tiempo_escape)) if estado.es_elite else escape_config.get("timeout", tiempo_escape)
+                    else:
+                        tiempo_escape = escape_config
+                        
                 if info['tiempo_en_estado'] >= tiempo_escape + escape_mob["duracion_total"] + 1:
                     estado.resetear_timestamp()
                     print(f"hilo de mob trabado activo por {info['tiempo_en_estado']:.1f} segundos    ")
@@ -257,7 +271,13 @@ if __name__ == "__main__":
         while True:
             info = estado.obtener_info()
             if info['tipo'] == TipoObjetivo.MOB:
-                tiempo_escape = ESCAPE_BY_MOB.get(info['nombre_coincidente'], ESCAPE_MOB["timeout_mob"])
+                escape_config = ESCAPE_BY_MOB.get(info['nombre_coincidente'])
+                tiempo_escape = ESCAPE_MOB["timeout_mob"]
+                if escape_config is not None:
+                    if isinstance(escape_config, dict):
+                         tiempo_escape = escape_config.get("tiempo_escape_elite", escape_config.get("timeout", tiempo_escape)) if estado.es_elite else escape_config.get("timeout", tiempo_escape)
+                    else:
+                         tiempo_escape = escape_config
                 print(f"[STATUS] Mob: {info['nombre_coincidente']} | "
                       f"Tiempo: {info['tiempo_en_estado']:.1f}s / {tiempo_escape}s | "
                       f"Punto actual: {hilo._escape_punto_actual + 1}", end='\r')

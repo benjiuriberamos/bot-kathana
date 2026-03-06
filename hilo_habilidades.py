@@ -75,6 +75,22 @@ class HiloHabilidades:
         
         return tiempo_desde_uso >= config['time']
     
+    def _habilidad_lista_elite(self, tecla: str) -> bool:
+        """Verifica cooldown para habilidades elite independientemente de si están activas en config normal"""
+        # Asegurar que la tecla existe en el diccionario de último uso
+        if tecla not in self.ultimo_uso:
+            self.ultimo_uso[tecla] = 0
+            
+        import configuracion
+        habilidades = configuracion.HABILIDADES
+        config = habilidades.get(tecla)
+        
+        cooldown = config['time'] if config else 5.0 # default cooldown 5s si no existe
+        
+        tiempo_actual = time.time()
+        tiempo_desde_uso = tiempo_actual - self.ultimo_uso[tecla]
+        return tiempo_desde_uso >= cooldown
+    
     def _usar_habilidad(self, tecla: str) -> None:
         """Usa una habilidad y registra el tiempo."""
         self._presionar_tecla(tecla)
@@ -116,6 +132,18 @@ class HiloHabilidades:
                     if config['active'] and self._habilidad_lista(tecla):
                         self._usar_habilidad(tecla)
                         time.sleep(0.1)  # Pausa entre habilidades
+                
+                # Lanzar secuencia élite
+                if tipo_actual == TipoObjetivo.MOB and estado.es_elite:
+                    escape_by_mob = getattr(configuracion, 'ESCAPE_BY_MOB', {})
+                    if nombre_coincidente in escape_by_mob and isinstance(escape_by_mob[nombre_coincidente], dict):
+                        habilidades_elite_str = escape_by_mob[nombre_coincidente].get("habilidades_elite", "")
+                        if habilidades_elite_str:
+                            teclas_elite = [t.strip() for t in habilidades_elite_str.split(',') if t.strip()]
+                            for tecla in teclas_elite:
+                                if self._habilidad_lista_elite(tecla):
+                                    self._usar_habilidad(tecla)
+                                    time.sleep(0.1)
                 
                 time.sleep(0.5)  # Revisar cada 0.5 segundos en combate
             else:

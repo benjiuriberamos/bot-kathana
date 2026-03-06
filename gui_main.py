@@ -622,15 +622,29 @@ class EscapeTab(QWidget):
         vbox_timeouts = QVBoxLayout()
         
         self.tabla_timeouts = QTableWidget()
-        self.tabla_timeouts.setColumnCount(2)
-        self.tabla_timeouts.setHorizontalHeaderLabels(["Mob", "Timeout (s)"])
+        self.tabla_timeouts.setColumnCount(5)
+        self.tabla_timeouts.setHorizontalHeaderLabels(["Mob", "Timeout (s)", "Vida Normal", "Timeout Elite (s)", "Habs Elite"])
         self.tabla_timeouts.horizontalHeader().setStretchLastSection(True)
         
         self.tabla_timeouts.setRowCount(len(escape_by_mob))
         row = 0
-        for mob, timeout in escape_by_mob.items():
+        for mob, config_data in escape_by_mob.items():
             self.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
+            if isinstance(config_data, dict):
+                timeout = config_data.get("timeout", 15.0)
+                vida = config_data.get("vida", 0)
+                timeout_elite = config_data.get("tiempo_escape_elite", timeout)
+                habilidades_elite = config_data.get("habilidades_elite", "")
+            else:
+                timeout = config_data
+                vida = 0
+                timeout_elite = timeout
+                habilidades_elite = ""
+                
             self.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
+            self.tabla_timeouts.setItem(row, 2, QTableWidgetItem(str(vida)))
+            self.tabla_timeouts.setItem(row, 3, QTableWidgetItem(str(timeout_elite)))
+            self.tabla_timeouts.setItem(row, 4, QTableWidgetItem(habilidades_elite))
             row += 1
         
         vbox_timeouts.addWidget(self.tabla_timeouts)
@@ -667,14 +681,19 @@ class EscapeTab(QWidget):
     
     def agregar_timeout(self):
         from PyQt5.QtWidgets import QInputDialog
-        mob, ok1 = QInputDialog.getText(self, "Agregar Timeout", "Nombre del mob:")
+        mob, ok1 = QInputDialog.getText(self, "Agregar", "Nombre del mob:")
         if ok1 and mob:
-            timeout, ok2 = QInputDialog.getDouble(self, "Agregar Timeout", "Timeout (segundos):", 15.0, 0.0, 300.0)
+            timeout, ok2 = QInputDialog.getDouble(self, "Agregar", "Timeout (s):", 15.0, 0.0, 300.0)
             if ok2:
-                row = self.tabla_timeouts.rowCount()
-                self.tabla_timeouts.insertRow(row)
-                self.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
-                self.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
+                vida, ok3 = QInputDialog.getInt(self, "Agregar", "Vida Normal:", 0, 0, 999999)
+                if ok3:
+                    row = self.tabla_timeouts.rowCount()
+                    self.tabla_timeouts.insertRow(row)
+                    self.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
+                    self.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
+                    self.tabla_timeouts.setItem(row, 2, QTableWidgetItem(str(vida)))
+                    self.tabla_timeouts.setItem(row, 3, QTableWidgetItem(str(timeout))) # Por defecto mismo timeout
+                    self.tabla_timeouts.setItem(row, 4, QTableWidgetItem(""))
     
     def eliminar_timeout(self):
         current_row = self.tabla_timeouts.currentRow()
@@ -696,10 +715,18 @@ class EscapeTab(QWidget):
         escape_by_mob = {}
         for row in range(self.tabla_timeouts.rowCount()):
             mob = self.tabla_timeouts.item(row, 0).text()
-            timeout_str = self.tabla_timeouts.item(row, 1).text()
             try:
-                timeout = float(timeout_str)
-                escape_by_mob[mob] = timeout
+                timeout = float(self.tabla_timeouts.item(row, 1).text() if self.tabla_timeouts.item(row, 1) else 15.0)
+                vida = int(self.tabla_timeouts.item(row, 2).text() if self.tabla_timeouts.item(row, 2) else 0)
+                timeout_elite = float(self.tabla_timeouts.item(row, 3).text() if self.tabla_timeouts.item(row, 3) else timeout)
+                habilidades = self.tabla_timeouts.item(row, 4).text() if self.tabla_timeouts.item(row, 4) else ""
+                
+                escape_by_mob[mob] = {
+                    "timeout": timeout,
+                    "vida": vida,
+                    "tiempo_escape_elite": timeout_elite,
+                    "habilidades_elite": habilidades
+                }
             except:
                 pass
         
@@ -1259,9 +1286,23 @@ class MainWindow(QMainWindow):
         escape_by_mob = config.get('ESCAPE_BY_MOB', {})
         self.tab_escape.tabla_timeouts.setRowCount(len(escape_by_mob))
         row = 0
-        for mob, timeout in escape_by_mob.items():
+        for mob, config_data in escape_by_mob.items():
             self.tab_escape.tabla_timeouts.setItem(row, 0, QTableWidgetItem(mob))
+            if isinstance(config_data, dict):
+                timeout = config_data.get("timeout", 15.0)
+                vida = config_data.get("vida", 0)
+                timeout_elite = config_data.get("tiempo_escape_elite", timeout)
+                habilidades_elite = config_data.get("habilidades_elite", "")
+            else:
+                timeout = config_data
+                vida = 0
+                timeout_elite = timeout
+                habilidades_elite = ""
+                
             self.tab_escape.tabla_timeouts.setItem(row, 1, QTableWidgetItem(str(timeout)))
+            self.tab_escape.tabla_timeouts.setItem(row, 2, QTableWidgetItem(str(vida)))
+            self.tab_escape.tabla_timeouts.setItem(row, 3, QTableWidgetItem(str(timeout_elite)))
+            self.tab_escape.tabla_timeouts.setItem(row, 4, QTableWidgetItem(habilidades_elite))
             row += 1
         
         # Actualizar pestaña Control Área
@@ -1341,10 +1382,13 @@ class MainWindow(QMainWindow):
             nombre = estado_info['nombre']
             tiempo = estado_info['tiempo']
             similitud = estado_info['similitud']
+            es_elite = estado_info.get('es_elite', False)
+            
+            tag_elite = " [Elite]" if es_elite else ""
             
             if tipo == 'mob':
                 emoji = "⚔️"
-                info_text = f"{emoji} {tipo}: {nombre} ({similitud:.0f}%) | Tiempo: {tiempo:.1f}s"
+                info_text = f"{emoji} {tipo}: {nombre}{tag_elite} ({similitud:.0f}%) | Tiempo: {tiempo:.1f}s"
             elif tipo == 'drop':
                 emoji = "🎁"
                 info_text = f"{emoji} {tipo}: {nombre} ({similitud:.0f}%) | Tiempo: {tiempo:.1f}s"

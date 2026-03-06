@@ -3,29 +3,10 @@
     "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
     "UMBRAL_SIMILITUD": 0.8,
     "MOBS_OBJETIVO": [
-        "Pizza Aganna (39)",
-        "Kaulitara (41)",
-        "Ananga (35)",
-        "Tarantula (30)",
-        "Ulkamukha (21)",
-        "Ulkamukha Caura (23)",
-        "Ulkamukha Satvan (25)",
-        "Visa Curni (27)",
-        "Sinkiu (53)",
-        "Sinkiu Gosu (58)",
-        "Nagamudra (52)",
         "Ghorayogi (50)",
         "Borangi (54)",
         "Bokyo (56)",
         "Bongbo (76)",
-        "Baoku (74)",
-        "Aganna Tara (40)",
-        "Kyrukrong Gosu (68)",
-        "Kyrukrong (66)",
-        "Choniukusin (60)",
-        "Mangriang (50)",
-        "Kemsa Tonyo (80)",
-        "Dogurpaso (75)",
         "Pitton (75)",
         "Guryasu (70)",
         "Balasta Tundela (64)",
@@ -36,11 +17,23 @@
         "Sik Chu (70)",
         "Zonbu (72)",
         "Bora (88)",
-        "Ban Zangkun (70)",
-        "Ban Dopang (75)"
+        "Soko (84)",
+        "Chumsum (86)",
+        "Skarakoro (81)",
+        "Guryasu (75)",
+        "Mosa Tonyo (80)",
+        "Kemsa Tonyo (80)",
+        "Kemcha Tonyo (90)",
+        "Chang  Tonyo (90)",
+        "Kembo Tonyo (80)",
+        "Kembo Tonyo (75)",
+        "Mob Tonyo (75)",
+        "Pitton (75)",
+        "Dogurpasu (75)",
+        "Kubasang (58)"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 1,
+        "repeticiones_f": 2,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {
@@ -50,19 +43,19 @@
         },
         "2": {
             "active": true,
-            "time": 0.2
+            "time": 0.5
         },
         "3": {
             "active": true,
-            "time": 0.2
+            "time": 0.3
         },
         "4": {
             "active": false,
-            "time": 0.2
+            "time": 1.0
         },
         "5": {
-            "active": false,
-            "time": 0.2
+            "active": true,
+            "time": 1.0
         },
         "6": {
             "active": true,
@@ -76,13 +69,13 @@
             "active": false,
             "time": 1.0
         },
-        "F": {
-            "active": false,
-            "time": 1.0
+        "9": {
+            "active": true,
+            "time": 75.0
         },
         "R": {
             "active": true,
-            "time": 0.5
+            "time": 1.0
         }
     },
     "AUTOCURACION": {
@@ -90,24 +83,14 @@
             "niveles": [
                 {
                     "nombre": "Vida Media",
-                    "x": 120,
+                    "x": 145,
                     "y": 62,
                     "teclas": [
-                        "4",
+                        "7",
                         "0",
-                        "7"
+                        "4"
                     ],
-                    "intervalo_sin": 0.5
-                },
-                {
-                    "nombre": "Vida Baja",
-                    "x": 80,
-                    "y": 62,
-                    "teclas": [
-                        "4",
-                        "7"
-                    ],
-                    "intervalo_sin": 0.3
+                    "intervalo_sin": 0.8
                 },
                 {
                     "nombre": "Nivel 3",
@@ -118,16 +101,7 @@
                         "7",
                         "8"
                     ],
-                    "intervalo_sin": 0.5
-                },
-                {
-                    "nombre": "Nivel 4",
-                    "x": 160,
-                    "y": 62,
-                    "teclas": [
-                        "4"
-                    ],
-                    "intervalo_sin": 0.5
+                    "intervalo_sin": 0.8
                 }
             ],
             "intervalo_con": 1.0
@@ -141,13 +115,13 @@
         }
     },
     "OBSERVADOR_OBJETIVO": {
-        "tecla_seleccionar": "1",
+        "tecla_seleccionar": "E",
         "timeout_drop": 3.0,
         "intervalo_revision": 0.1
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 15.0,
+        "timeout_mob": 10.0,
         "punto_click_primero": {
             "x": 405,
             "y": 360
@@ -174,16 +148,120 @@
         "duracion_total": 1.0
     },
     "ESCAPE_BY_MOB": {
-        "Sinkiu (53)": 20.0,
-        "Zinkiu Gosu (58)": 25.0,
-        "Mangrian (50)": 15.0,
-        "Kyoin (48)": 15.0,
-        "Sinkiu Gosu (58)": 25.0,
-        "Bongbo (76)": 30.0,
-        "Baoku (74)": 30.0,
-        "Guryasu (75)": 25.0,
-        "Guryasu (70)": 12.0,
-        "Pitton (75)": 12.0
+        "Sinkiu (53)": {
+            "timeout": 20.0,
+            "vida": 0,
+            "tiempo_escape_elite": 20.0,
+            "habilidades_elite": ""
+        },
+        "Zinkiu Gosu (58)": {
+            "timeout": 25.0,
+            "vida": 0,
+            "tiempo_escape_elite": 25.0,
+            "habilidades_elite": ""
+        },
+        "Mangrian (50)": {
+            "timeout": 15.0,
+            "vida": 0,
+            "tiempo_escape_elite": 15.0,
+            "habilidades_elite": ""
+        },
+        "Kyoin (48)": {
+            "timeout": 15.0,
+            "vida": 0,
+            "tiempo_escape_elite": 15.0,
+            "habilidades_elite": ""
+        },
+        "Sinkiu Gosu (58)": {
+            "timeout": 25.0,
+            "vida": 0,
+            "tiempo_escape_elite": 25.0,
+            "habilidades_elite": ""
+        },
+        "Bongbo (76)": {
+            "timeout": 30.0,
+            "vida": 0,
+            "tiempo_escape_elite": 30.0,
+            "habilidades_elite": ""
+        },
+        "Baoku (74)": {
+            "timeout": 30.0,
+            "vida": 0,
+            "tiempo_escape_elite": 30.0,
+            "habilidades_elite": ""
+        },
+        "Dogurpasu (75)": {
+            "timeout": 30.0,
+            "vida": 15200,
+            "tiempo_escape_elite": 80.0,
+            "habilidades_elite": "1"
+        },
+        "Guryasu (70)": {
+            "timeout": 20.0,
+            "vida": 11800,
+            "tiempo_escape_elite": 60.0,
+            "habilidades_elite": "1"
+        },
+        "Pitton (75)": {
+            "timeout": 12.0,
+            "vida": 0,
+            "tiempo_escape_elite": 12.0,
+            "habilidades_elite": ""
+        },
+        "Kyrukrong Gosu (68)": {
+            "timeout": 12.0,
+            "vida": 0,
+            "tiempo_escape_elite": 12.0,
+            "habilidades_elite": ""
+        },
+        "Kyrukrong (66)": {
+            "timeout": 12.0,
+            "vida": 0,
+            "tiempo_escape_elite": 12.0,
+            "habilidades_elite": ""
+        },
+        "Soko (84)": {
+            "timeout": 40.0,
+            "vida": 0,
+            "tiempo_escape_elite": 40.0,
+            "habilidades_elite": ""
+        },
+        "Chumsum (86)": {
+            "timeout": 15.0,
+            "vida": 0,
+            "tiempo_escape_elite": 15.0,
+            "habilidades_elite": ""
+        },
+        "Skarakoro (81)": {
+            "timeout": 30.0,
+            "vida": 0,
+            "tiempo_escape_elite": 30.0,
+            "habilidades_elite": ""
+        },
+        "Bora (88)": {
+            "timeout": 30.0,
+            "vida": 0,
+            "tiempo_escape_elite": 30.0,
+            "habilidades_elite": ""
+        },
+        "Zonbu (72)": {
+            "timeout": 50.0,
+            "vida": 0,
+            "tiempo_escape_elite": 50.0,
+            "habilidades_elite": ""
+        },
+        "Kemsa Tonyo (80)": {
+            "timeout": 15.0,
+            "vida": 15200,
+            "tiempo_escape_elite": 60.0,
+            "habilidades_elite": "1"
+        },
+        "Kubasang (58)": {
+            "timeout": 10.0,
+            "vida": 4850,
+            "tiempo_escape_elite": 60.0,
+            "habilidades_elite": ""
+        }
     },
     "CONTROL_AREA": {
         "habilitado": false,

@@ -151,7 +151,8 @@ class BotController:
                 'tipo': 'nulo',
                 'nombre': 'N/A',
                 'tiempo': 0.0,
-                'similitud': 0.0
+                'similitud': 0.0,
+                'es_elite': False
             }
         
         try:
@@ -160,13 +161,15 @@ class BotController:
                 'tipo': info['tipo'].value,
                 'nombre': info['nombre_coincidente'] or 'N/A',
                 'tiempo': info['tiempo_en_estado'],
-                'similitud': info['similitud'] * 100
+                'similitud': info['similitud'] * 100,
+                'es_elite': info.get('es_elite', False)
             }
         except:
             return {
                 'tipo': 'nulo',
                 'nombre': 'N/A',
                 'tiempo': 0.0,
-                'similitud': 0.0
+                'similitud': 0.0,
+                'es_elite': False
             }
 
