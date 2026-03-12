@@ -1378,7 +1378,7 @@ class MainWindow(QMainWindow):
         """Actualiza el estado periódicamente."""
         if self.bot_controller.esta_ejecutando():
             estado_info = self.bot_controller.obtener_estado()
-            tipo = estado_info['tipo'].upper()
+            tipo = estado_info['tipo'].lower()
             nombre = estado_info['nombre']
             tiempo = estado_info['tiempo']
             similitud = estado_info['similitud']
