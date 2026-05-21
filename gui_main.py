@@ -590,6 +590,19 @@ class EscapeTab(QWidget):
         self.duracion_total.setValue(escape_mob.get('duracion_total', 1.0))
         grid_general.addWidget(self.duracion_total, 5, 1)
         
+        pixel_vida_mob = escape_mob.get('pixel_vida_mob', {'x': 1, 'y': 1})
+        grid_general.addWidget(QLabel("Pixel Vida Mob X:"), 6, 0)
+        self.pixel_vida_mob_x = QSpinBox()
+        self.pixel_vida_mob_x.setRange(0, 2000)
+        self.pixel_vida_mob_x.setValue(pixel_vida_mob.get('x', 1))
+        grid_general.addWidget(self.pixel_vida_mob_x, 6, 1)
+        
+        grid_general.addWidget(QLabel("Pixel Vida Mob Y:"), 7, 0)
+        self.pixel_vida_mob_y = QSpinBox()
+        self.pixel_vida_mob_y.setRange(0, 2000)
+        self.pixel_vida_mob_y.setValue(pixel_vida_mob.get('y', 1))
+        grid_general.addWidget(self.pixel_vida_mob_y, 7, 1)
+        
         group_general.setLayout(grid_general)
         layout.addWidget(group_general)
         
@@ -737,6 +750,10 @@ class EscapeTab(QWidget):
                 'punto_click_primero': {
                     'x': self.punto_primero_x.value(),
                     'y': self.punto_primero_y.value(),
+                },
+                'pixel_vida_mob': {
+                    'x': self.pixel_vida_mob_x.value(),
+                    'y': self.pixel_vida_mob_y.value(),
                 },
                 'puntos_clic': puntos,
                 'veces': self.veces.value(),
@@ -1273,6 +1290,10 @@ class MainWindow(QMainWindow):
         self.tab_escape.punto_primero_y.setValue(punto_primero.get('y', 360))
         self.tab_escape.veces.setValue(escape_mob.get('veces', 1))
         self.tab_escape.duracion_total.setValue(escape_mob.get('duracion_total', 1.0))
+        
+        pixel_vida_mob = escape_mob.get('pixel_vida_mob', {'x': 1, 'y': 1})
+        self.tab_escape.pixel_vida_mob_x.setValue(pixel_vida_mob.get('x', 1))
+        self.tab_escape.pixel_vida_mob_y.setValue(pixel_vida_mob.get('y', 1))
         
         self.tab_escape.lista_puntos.clear()
         puntos = escape_mob.get('puntos_clic', [])
