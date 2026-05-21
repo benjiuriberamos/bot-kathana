@@ -16,6 +16,7 @@ import numpy as np
 import re
 from difflib import SequenceMatcher
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import (
     TESSERACT_PATH, UMBRAL_SIMILITUD,
@@ -25,7 +26,6 @@ from configuracion import (
 # Configurar Tesseract (se actualizará dinámicamente)
 def _configurar_tesseract():
     """Configura Tesseract con la ruta actual del módulo."""
-    import configuracion
     pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
 
 _configurar_tesseract()
@@ -35,18 +35,18 @@ _configurar_tesseract()
 # Estas medidas son fijas porque el área del nombre del mob
 # siempre está en la misma posición dentro del juego
 # ============================================================
-OCR_LEFT_OFFSET = 5      # Margen izquierdo desde el borde de la ventana
+OCR_LEFT_OFFSET = 0      # Margen izquierdo desde el borde de la ventana
 OCR_OFFSET_JUEGO = 60    # Distancia desde el contenido del juego hasta el nombre del mob
-OCR_WIDTH = 150          # Ancho del área de captura
+OCR_WIDTH = 155          # Ancho del área de captura
 OCR_HEIGHT = 15          # Alto del área de captura
 
 # ============================================================
 # CONSTANTES CONFIGURABLES PARA OCR DE VIDA
 # NOTA: Ajustar estos valores según la posición real de la barra de vida en el juego
 # ============================================================
-OCR_VIDA_LEFT_OFFSET = 5   # Distancia horizontal hacia la barra de vida
+OCR_VIDA_LEFT_OFFSET = 0   # Distancia horizontal hacia la barra de vida
 OCR_VIDA_OFFSET_JUEGO = 80  # Distancia vertical hacia la barra de vida 
-OCR_VIDA_WIDTH = 150        # Ancho para abarcar "1500/1500"
+OCR_VIDA_WIDTH = 155        # Ancho para abarcar "1500/1500"
 OCR_VIDA_HEIGHT = 12        # Alto para el texto
 
 def _obtener_altura_barra_titulo() -> int:
@@ -224,7 +224,6 @@ class HiloDetectorOCR:
         if vida_maxima == 0:
             return False # Falló el OCR de vida, no se asume élite
             
-        import configuracion
         escape_by_mob = getattr(configuracion, 'ESCAPE_BY_MOB', {})
         
         # Verificar si hay vida normal configurada para este mob
@@ -256,7 +255,6 @@ class HiloDetectorOCR:
             tuple: (nombre_encontrado, similitud) o (None, 0)
         """
         # Leer umbral dinámicamente desde el módulo
-        import configuracion
         umbral = configuracion.UMBRAL_SIMILITUD
         
         if not nombre_detectado:
@@ -289,7 +287,6 @@ class HiloDetectorOCR:
             texto_detectado: Texto extraído por OCR
         """
         # Leer listas dinámicamente desde el módulo
-        import configuracion
         mobs_objetivo = configuracion.MOBS_OBJETIVO
         
         # Si el texto está vacío -> NULO
@@ -334,7 +331,6 @@ class HiloDetectorOCR:
             
             try:
                 # Actualizar configuración de Tesseract por si cambió
-                import configuracion
                 pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
                 
                 # 2. Capturar la región del objetivo

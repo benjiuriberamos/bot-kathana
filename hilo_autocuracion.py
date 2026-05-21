@@ -8,7 +8,10 @@ import ctypes
 import time
 import threading
 from typing import Tuple
+import mss
+import numpy as np
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import AUTOCURACION, VK_CODES
 
@@ -84,8 +87,8 @@ class HiloAutocuracion:
         self.hwnd = hwnd
         self.ejecutando = False
         self.thread_vida = None
+        self.thread_vida = None
         self.thread_mana = None
-        self.gdi32 = ctypes.windll.gdi32
     
     def _obtener_rect_ventana(self) -> RECT:
         """Obtiene las coordenadas de la ventana."""
@@ -95,12 +98,12 @@ class HiloAutocuracion:
     
     def _obtener_color_pixel(self, x_relativo: int, y_relativo: int, hdc=None, rect=None) -> Tuple[int, int, int]:
         """
-        Obtiene el color RGB de un píxel en coordenadas relativas a la ventana.
+        Obtiene el color RGB de un píxel en coordenadas relativas a la ventana usando mss.
         
         Args:
             x_relativo: Coordenada X relativa a la ventana
             y_relativo: Coordenada Y relativa a la ventana
-            hdc: Handle de contexto de dispositivo (opcional)
+            hdc: Ignorado (mantenido por compatibilidad)
             rect: Rectángulo de la ventana (opcional)
             
         Returns:
@@ -112,21 +115,20 @@ class HiloAutocuracion:
         x_absoluto = rect.left + x_relativo
         y_absoluto = rect.top + y_relativo
         
-        release_dc = False
-        if hdc is None:
-            hdc = user32.GetDC(0)
-            release_dc = True
-            
-        color = self.gdi32.GetPixel(hdc, x_absoluto, y_absoluto)
-        
-        if release_dc:
-            user32.ReleaseDC(0, hdc)
-        
-        r = color & 0xFF
-        g = (color >> 8) & 0xFF
-        b = (color >> 16) & 0xFF
-        
-        return r, g, b
+        region = {
+            "top": y_absoluto,
+            "left": x_absoluto,
+            "width": 1,
+            "height": 1
+        }
+        try:
+            with mss.mss() as sct:
+                img = np.array(sct.grab(region))
+                b, g, r = img[0][0][:3]
+                return (int(r), int(g), int(b))
+        except Exception:
+            # Si la ventana se sale completamente de los límites de los monitores
+            return (0, 0, 0)
     
     def _colores_similares(self, color1: Tuple[int, int, int], 
                           color2: Tuple[int, int, int], 
@@ -211,7 +213,6 @@ class HiloAutocuracion:
         
         while self.ejecutando:
             # Leer configuración dinámicamente desde el módulo
-            import configuracion
             config_vida = configuracion.AUTOCURACION['vida']
 
             if 'niveles' in config_vida:
@@ -229,11 +230,10 @@ class HiloAutocuracion:
                 
                 # Obtener contexto una sola vez para todos los niveles
                 try:
-                    hdc = user32.GetDC(0)
                     rect = self._obtener_rect_ventana()
                     
                     for nivel in config_vida['niveles']:
-                        tiene_vida, color = self._tiene_vida(nivel['x'], nivel['y'], hdc=hdc, rect=rect)
+                        tiene_vida, color = self._tiene_vida(nivel['x'], nivel['y'], rect=rect)
                         
                         if not tiene_vida:
                             vida_ok = False
@@ -250,7 +250,7 @@ class HiloAutocuracion:
                             break  # Procesar solo el primer nivel que falle
                             
                 finally:
-                    user32.ReleaseDC(0, hdc)
+                    pass
                 
                 if vida_ok:
                     time.sleep(config_vida.get('intervalo_con', 1.0))
@@ -279,7 +279,7 @@ class HiloAutocuracion:
         
         while self.ejecutando:
             # Leer configuración dinámicamente desde el módulo
-            config = AUTOCURACION['mana']
+            config = configuracion.AUTOCURACION['mana']
             
             # Verificar si este hilo está activo
             if not estado.hilo_activo('autocuracion'):
@@ -324,12 +324,18 @@ class HiloAutocuracion:
         """Muestra la configuración actual de autocuración."""
         print("\n[CONFIGURACIÓN DE AUTOCURACIÓN]")
         print("-" * 50)
-        for recurso, config in AUTOCURACION.items():
+        for recurso, config in configuracion.AUTOCURACION.items():
             print(f"  {recurso.upper()}:")
-            print(f"    Posición: ({config['x']}, {config['y']})")
-            print(f"    Tecla: '{config['tecla']}'")
-            print(f"    Intervalo con recurso: {config['intervalo_con']}s")
-            print(f"    Intervalo sin recurso: {config['intervalo_sin']}s")
+            if 'niveles' in config:
+                for idx, nivel in enumerate(config['niveles']):
+                    print(f"    Nivel {nivel.get('nombre', idx+1)}:")
+                    print(f"      Posición: ({nivel.get('x')}, {nivel.get('y')})")
+                    print(f"      Teclas: '{nivel.get('teclas')}'")
+            else:
+                print(f"    Posición: ({config.get('x', 'N/A')}, {config.get('y', 'N/A')})")
+                print(f"    Tecla: '{config.get('tecla', config.get('teclas', 'N/A'))}'")
+            print(f"    Intervalo con recurso: {config.get('intervalo_con', 'N/A')}s")
+            print(f"    Intervalo sin recurso: {config.get('intervalo_sin', 'N/A')}s")
         print("-" * 50)
 
 

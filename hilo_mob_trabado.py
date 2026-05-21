@@ -5,6 +5,7 @@ Detecta cuando un mob lleva mucho tiempo y ejecuta la secuencia de escape (clics
 import time
 import threading
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import ESCAPE_MOB, ESCAPE_BY_MOB
 import ctypes
@@ -60,7 +61,6 @@ class HiloMobTrabado:
     # ------------------------------
     def _ejecutar_escape(self) -> None:
         # Leer configuración dinámicamente desde el módulo
-        import configuracion
         escape_mob = configuracion.ESCAPE_MOB
         
         # Obtener nombre una vez al inicio
@@ -131,7 +131,6 @@ class HiloMobTrabado:
 
     def _verificar_mob_trabado(self) -> bool:
         # Leer configuración dinámicamente desde el módulo
-        import configuracion
         escape_mob = configuracion.ESCAPE_MOB
         escape_by_mob = configuracion.ESCAPE_BY_MOB
         
@@ -178,7 +177,6 @@ class HiloMobTrabado:
 
             try:
                 # Leer configuración dinámicamente desde el módulo
-                import configuracion
                 escape_mob = configuracion.ESCAPE_MOB
                 escape_by_mob = configuracion.ESCAPE_BY_MOB
                 

@@ -1148,9 +1148,6 @@ class MainWindow(QMainWindow):
         self.tab_escape = EscapeTab(self.config)
         self.tabs.addTab(self.tab_escape, "Escape")
         
-        self.tab_control_area = ControlAreaTab(self.config)
-        self.tabs.addTab(self.tab_control_area, "Control Área")
-        
         layout.addWidget(self.tabs)
         
         # Botones inferiores
@@ -1305,20 +1302,7 @@ class MainWindow(QMainWindow):
             self.tab_escape.tabla_timeouts.setItem(row, 4, QTableWidgetItem(habilidades_elite))
             row += 1
         
-        # Actualizar pestaña Control Área
-        control_area = config.get('CONTROL_AREA', {})
-        self.tab_control_area.checkbox_habilitado.setChecked(control_area.get('habilitado', False))
-        self.tab_control_area.intervalo_lectura.setValue(control_area.get('intervalo_lectura', 0.5))
-        self.tab_control_area.intervalo_correccion.setValue(control_area.get('intervalo_correccion', 0.2))
-        self.tab_control_area.duracion_movimiento.setValue(control_area.get('duracion_movimiento', 0.3))
-        
-        self.tab_control_area.tabla_poligono.setRowCount(0)
-        poligono = control_area.get('poligono', [])
-        for punto in poligono:
-            row = self.tab_control_area.tabla_poligono.rowCount()
-            self.tab_control_area.tabla_poligono.insertRow(row)
-            self.tab_control_area.tabla_poligono.setItem(row, 0, QTableWidgetItem(str(punto[0])))
-            self.tab_control_area.tabla_poligono.setItem(row, 1, QTableWidgetItem(str(punto[1])))
+        # tab_control_area eliminado
     
     def obtener_configuracion_desde_interfaz(self) -> dict:
         """Recopila la configuración actual desde todas las pestañas de la interfaz."""
@@ -1332,7 +1316,6 @@ class MainWindow(QMainWindow):
         config.update(self.tab_autocuracion.obtener_valores())
         config.update(self.tab_observador.obtener_valores())
         config.update(self.tab_escape.obtener_valores())
-        config.update(self.tab_control_area.obtener_valores())
         
         return config
     
@@ -1397,20 +1380,9 @@ class MainWindow(QMainWindow):
                 info_text = f"{emoji} {tipo}: {nombre} | Tiempo: {tiempo:.1f}s"
             
             self.info_label.setText(info_text)
-            
-            # Actualizar posición en el mapa de Control Área
-            try:
-                pos = estado.obtener_posicion()
-                # Actualizar siempre que haya coordenadas válidas (x o y > 0)
-                if pos['x'] > 0 or pos['y'] > 0:
-                    self.tab_control_area.actualizar_posicion(
-                        pos['x'], pos['y'], pos['dentro_area']
-                    )
-            except Exception as e:
-                print(f"[GUI] Error actualizando posición: {e}")
         else:
-            # Bot detenido - limpiar posición del mapa
-            self.tab_control_area.limpiar_posicion()
+            # Bot detenido
+            pass
 
 
 def main():

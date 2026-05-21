@@ -4,8 +4,6 @@
     "UMBRAL_SIMILITUD": 0.8,
     "MOBS_OBJETIVO": [
         "Ghorayogi (50)",
-        "Borangi (54)",
-        "Bokyo (56)",
         "Bongbo (76)",
         "Pitton (75)",
         "Guryasu (70)",
@@ -30,11 +28,24 @@
         "Mob Tonyo (75)",
         "Pitton (75)",
         "Dogurpasu (75)",
-        "Kubasang (58)"
+        "Kubasang (58)",
+        "Borangi",
+        "Byokbo",
+        "Zaku",
+        "Kubasang",
+        "Choniokusin",
+        "Zinmon",
+        "Zinmon Gosu",
+        "Balasta Drbhika",
+        "Balasta Tundela",
+        "Pitton",
+        "Dogurpasu",
+        "Kemsa Tonyo",
+        "Kubasang"
     ],
     "LOOT_DROP": {
         "repeticiones_f": 2,
-        "intervalo_f": 0.5
+        "intervalo_f": 0.4
     },
     "HABILIDADES": {
         "1": {
@@ -43,7 +54,7 @@
         },
         "2": {
             "active": true,
-            "time": 0.5
+            "time": 0.3
         },
         "3": {
             "active": true,
@@ -54,8 +65,8 @@
             "time": 1.0
         },
         "5": {
-            "active": true,
-            "time": 1.0
+            "active": false,
+            "time": 0.3
         },
         "6": {
             "active": true,
@@ -75,7 +86,7 @@
         },
         "R": {
             "active": true,
-            "time": 1.0
+            "time": 0.1
         }
     },
     "AUTOCURACION": {
@@ -83,45 +94,45 @@
             "niveles": [
                 {
                     "nombre": "Vida Media",
-                    "x": 145,
+                    "x": 190,
                     "y": 62,
                     "teclas": [
                         "7",
-                        "0",
                         "4"
                     ],
-                    "intervalo_sin": 0.8
+                    "intervalo_sin": 0.4
                 },
                 {
                     "nombre": "Nivel 3",
-                    "x": 67,
+                    "x": 90,
                     "y": 62,
                     "teclas": [
+                        "8",
                         "4",
-                        "7",
-                        "8"
+                        "5",
+                        "7"
                     ],
-                    "intervalo_sin": 0.8
+                    "intervalo_sin": 0.1
                 }
             ],
             "intervalo_con": 1.0
         },
         "mana": {
-            "x": 45,
+            "x": 80,
             "y": 80,
-            "tecla": "9",
+            "tecla": "0",
             "intervalo_con": 1.0,
             "intervalo_sin": 0.5
         }
     },
     "OBSERVADOR_OBJETIVO": {
         "tecla_seleccionar": "E",
-        "timeout_drop": 3.0,
-        "intervalo_revision": 0.1
+        "timeout_drop": 0.3,
+        "intervalo_revision": 0.2
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 10.0,
+        "timeout_mob": 15.0,
         "punto_click_primero": {
             "x": 405,
             "y": 360
@@ -190,16 +201,16 @@
             "tiempo_escape_elite": 30.0,
             "habilidades_elite": ""
         },
-        "Dogurpasu (75)": {
-            "timeout": 30.0,
+        "Dogurpasu": {
+            "timeout": 20.0,
             "vida": 15200,
-            "tiempo_escape_elite": 80.0,
+            "tiempo_escape_elite": 30.0,
             "habilidades_elite": "1"
         },
-        "Guryasu (70)": {
-            "timeout": 20.0,
+        "Guryasu": {
+            "timeout": 15.0,
             "vida": 11800,
-            "tiempo_escape_elite": 60.0,
+            "tiempo_escape_elite": 25.0,
             "habilidades_elite": "1"
         },
         "Pitton (75)": {
@@ -220,131 +231,23 @@
             "tiempo_escape_elite": 12.0,
             "habilidades_elite": ""
         },
-        "Soko (84)": {
-            "timeout": 40.0,
-            "vida": 0,
-            "tiempo_escape_elite": 40.0,
-            "habilidades_elite": ""
-        },
-        "Chumsum (86)": {
-            "timeout": 15.0,
-            "vida": 0,
-            "tiempo_escape_elite": 15.0,
-            "habilidades_elite": ""
-        },
-        "Skarakoro (81)": {
-            "timeout": 30.0,
-            "vida": 0,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": ""
-        },
-        "Bora (88)": {
-            "timeout": 30.0,
-            "vida": 0,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": ""
-        },
         "Zonbu (72)": {
             "timeout": 50.0,
             "vida": 0,
             "tiempo_escape_elite": 50.0,
             "habilidades_elite": ""
         },
-        "Kemsa Tonyo (80)": {
-            "timeout": 15.0,
+        "Kemsa Tonyo": {
+            "timeout": 20.0,
             "vida": 15200,
-            "tiempo_escape_elite": 60.0,
+            "tiempo_escape_elite": 30.0,
             "habilidades_elite": "1"
         },
         "Kubasang (58)": {
-            "timeout": 10.0,
+            "timeout": 6.0,
             "vida": 4850,
-            "tiempo_escape_elite": 60.0,
+            "tiempo_escape_elite": 15.0,
             "habilidades_elite": ""
         }
-    },
-    "CONTROL_AREA": {
-        "habilitado": false,
-        "poligono": [
-            [
-                240,
-                601
-            ],
-            [
-                292,
-                556
-            ],
-            [
-                293,
-                558
-            ],
-            [
-                285,
-                571
-            ],
-            [
-                311,
-                578
-            ],
-            [
-                319,
-                570
-            ],
-            [
-                322,
-                560
-            ],
-            [
-                344,
-                557
-            ],
-            [
-                358,
-                524
-            ],
-            [
-                379,
-                479
-            ],
-            [
-                327,
-                432
-            ],
-            [
-                283,
-                419
-            ],
-            [
-                207,
-                334
-            ],
-            [
-                163,
-                320
-            ],
-            [
-                62,
-                334
-            ],
-            [
-                71,
-                412
-            ],
-            [
-                137,
-                451
-            ],
-            [
-                66,
-                613
-            ],
-            [
-                118,
-                621
-            ]
-        ],
-        "intervalo_lectura": 0.5,
-        "intervalo_correccion": 0.2,
-        "duracion_movimiento": 3.0
     }
 }

@@ -160,30 +160,7 @@ ESCAPE_BY_MOB = {
 }
 
 
-# ============================================================
-# CONTROL DE ÁREA - Mantiene al personaje dentro de un polígono
-# El minimapa está anclado a la esquina superior derecha
-# Coordenadas en formato "X / Y" (cuarto cuadrante del mapa)
-# NOTA: La región OCR de coordenadas es fija (ver hilo_control_area.py)
-# ============================================================
-CONTROL_AREA = {
-    "habilitado": False,
-    
-    # Polígono que define el área permitida (lista de puntos [X, Y])
-    # Los puntos deben formar un polígono cerrado en sentido horario o antihorario
-    # Ejemplo: cuadrado de farmeo
-    "poligono": [
-        [400, 600],   # Esquina superior izquierda
-        [520, 600],   # Esquina superior derecha
-        [520, 750],   # Esquina inferior derecha
-        [400, 750]    # Esquina inferior izquierda
-    ],
-    
-    # Intervalos de tiempo
-    "intervalo_lectura": 0.5,      # Segundos entre cada lectura de coordenadas
-    "intervalo_correccion": 0.2,   # Segundos entre intentos de corrección
-    "duracion_movimiento": 3.0,    # Segundos que se mantiene presionada la tecla
-}
+
 
 
 # ============================================================

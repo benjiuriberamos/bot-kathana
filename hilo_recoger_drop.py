@@ -5,6 +5,7 @@ Escucha transiciones MOB -> NULO y ejecuta la secuencia de loot.
 import time
 import threading
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import VK_CODES, LOOT_DROP
 
@@ -67,7 +68,6 @@ class HiloRecogerDrop:
         estado.pausar_todos_los_hilos()
 
         # Leer configuración dinámicamente desde el módulo
-        import configuracion
         config_loot = configuracion.LOOT_DROP
         repeticiones = max(0, int(config_loot.get('repeticiones_f', 0)))
         intervalo = float(config_loot.get('intervalo_f', 0.5))

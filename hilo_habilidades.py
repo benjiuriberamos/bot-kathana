@@ -8,6 +8,7 @@ import ctypes
 import time
 import threading
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import HABILIDADES, VK_CODES
 
@@ -59,7 +60,6 @@ class HiloHabilidades:
             True si pasó suficiente tiempo desde el último uso
         """
         # Leer configuración dinámicamente desde el módulo
-        import configuracion
         habilidades = configuracion.HABILIDADES
         
         config = habilidades.get(tecla)
@@ -81,7 +81,6 @@ class HiloHabilidades:
         if tecla not in self.ultimo_uso:
             self.ultimo_uso[tecla] = 0
             
-        import configuracion
         habilidades = configuracion.HABILIDADES
         config = habilidades.get(tecla)
         
@@ -124,7 +123,6 @@ class HiloHabilidades:
                     # self._presionar_r_atacar()
                 
                 # Leer configuración dinámicamente desde el módulo
-                import configuracion
                 habilidades = configuracion.HABILIDADES
                 
                 # Revisar cada habilidad activa

@@ -7,7 +7,7 @@ Tipos de objetivo:
 - MOB: Objetivo es un mob de la lista
 - DROP: Objetivo es un item dropeado
 """
-import multiprocessing
+
 import threading
 import time
 from enum import Enum
@@ -43,16 +43,9 @@ class EstadoObjetivo:
         return cls._instance
     
     def _inicializar(self):
-        """Inicializa el estado usando multiprocessing.Manager."""
-        # Crear manager si no existe (solo en el proceso principal)
-        if multiprocessing.current_process().name == 'MainProcess':
-            if EstadoObjetivo._manager is None:
-                EstadoObjetivo._manager = multiprocessing.Manager()
-        else:
-            return
-        
-        # Usar un diccionario compartido para todo el estado (más eficiente para strings)
-        self._estado = EstadoObjetivo._manager.dict({
+        """Inicializa el estado usando diccionarios nativos de Python."""
+        # Usar un diccionario nativo para todo el estado
+        self._estado = {
             'tipo': TipoObjetivo.NULO.value,
             'tipo_anterior': TipoObjetivo.NULO.value,
             'nombre': '',
@@ -61,29 +54,23 @@ class EstadoObjetivo:
             'es_elite': False,
             'timestamp_cambio': time.time(),
             'ejecutando_accion_loot': False,
-            # Control de área - posición del personaje
-            'pos_x': 0,
-            'pos_y': 0,
-            'pos_dentro_area': True,
-            'pos_actualizada': False,
-        })
+        }
         
         # Control de procesos - por defecto todos activos
-        self._procesos_activos = EstadoObjetivo._manager.dict({
+        self._procesos_activos = {
             'autocuracion': True, # Siempre verdadero
             'detector_ocr': True, # Siempre verdadero
             'habilidades': False,
             'observador_objetivo': True,
             'mob_trabado': False,
             'recoger_drop': False,
-            'control_area': True, # Control de área siempre activo
-        })
+        }
 
-        #self._procesos_activos_default = ['autocuracion','detector_ocr','control_area']
-        self._procesos_activos_default = ['autocuracion','control_area']
+        #self._procesos_activos_default = ['autocuracion','detector_ocr']
+        self._procesos_activos_default = ['autocuracion']
         
-        # Lock para sincronización (ahora es multiprocessing.Lock)
-        self._lock = multiprocessing.Lock()
+        # Lock para sincronización (ahora es threading.Lock)
+        self._lock = threading.Lock()
     
     # ============================================================
     # Control de procesos
@@ -119,12 +106,12 @@ class EstadoObjetivo:
             return self._procesos_activos.get(nombre_hilo, True)
     
     def pausar_todos_los_hilos(self):
-        """Pausa todos los procesos excepto los default (autocuración, detector_ocr, control_area)."""
+        """Pausa todos los procesos excepto los default (autocuración, detector_ocr)."""
         with self._lock:
             for proceso in self._procesos_activos:
                 if proceso not in self._procesos_activos_default:
                     self._procesos_activos[proceso] = False
-            print("[ESTADO] ⏸️  Procesos de combate PAUSADOS (mantiene: autocuración, detector_ocr, control_area)")
+            print("[ESTADO] ⏸️  Procesos de combate PAUSADOS (mantiene: autocuración, detector_ocr)")
     
     def reactivar_todos_los_hilos(self):
         """Reactiva todos los procesos."""

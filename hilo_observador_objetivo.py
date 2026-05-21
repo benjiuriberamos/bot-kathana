@@ -10,6 +10,7 @@ import ctypes
 import time
 import threading
 
+import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import VK_CODES, OBSERVADOR_OBJETIVO
 from hilo_detector_ocr import HiloDetectorOCR
@@ -44,7 +45,6 @@ class HiloObservadorObjetivo:
     def _presionar_tecla_para_seleccionar(self) -> None:
         """Presiona la tecla configurada para seleccionar objetivo."""
         # Leer configuración dinámicamente desde el módulo
-        import configuracion
         tecla = configuracion.OBSERVADOR_OBJETIVO.get('tecla_seleccionar', 'E')
         vk_codes = configuracion.VK_CODES
         

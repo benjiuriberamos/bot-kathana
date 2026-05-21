@@ -76,7 +76,6 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
             'OBSERVADOR_OBJETIVO': cfg.OBSERVADOR_OBJETIVO,
             'ESCAPE_MOB': cfg.ESCAPE_MOB,
             'ESCAPE_BY_MOB': cfg.ESCAPE_BY_MOB,
-            'CONTROL_AREA': cfg.CONTROL_AREA,
         }
     except Exception as e:
         print(f"Error al cargar configuración por defecto: {e}")
@@ -113,6 +112,4 @@ def aplicar_configuracion_a_modulo(config: Dict[str, Any]) -> None:
         cfg.ESCAPE_MOB = config['ESCAPE_MOB']
     if 'ESCAPE_BY_MOB' in config:
         cfg.ESCAPE_BY_MOB = config['ESCAPE_BY_MOB']
-    if 'CONTROL_AREA' in config:
-        cfg.CONTROL_AREA = config['CONTROL_AREA']
 
