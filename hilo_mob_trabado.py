@@ -8,6 +8,7 @@ import threading
 import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import ESCAPE_MOB, ESCAPE_BY_MOB
+from hilo_detector_ocr import HiloDetectorOCR
 import ctypes
 
 
@@ -33,6 +34,7 @@ class HiloMobTrabado:
         self.thread = None
         self._escape_ejecutado_para_mob = None
         self._escape_punto_actual = 0
+        self.detector_ocr = HiloDetectorOCR(hwnd)
 
     # ------------------------------
     # Helpers de ventana y clic
@@ -156,8 +158,9 @@ class HiloMobTrabado:
                 tiempo_escape = escape_config
         
         if tiempo_en_estado >= tiempo_escape:
-            self._escape_ejecutado_para_mob = nombre_actual
-            return True
+            if not self.detector_ocr._es_mob_danado():
+                self._escape_ejecutado_para_mob = nombre_actual
+                return True
 
         # Si cambia de mob, limpiar flag
         if self._escape_ejecutado_para_mob and self._escape_ejecutado_para_mob != nombre_actual:
@@ -245,6 +248,8 @@ if __name__ == "__main__":
     from game_window import GameWindow
     from configuracion import GAME_WINDOW_TITLE
     
+    detector = None
+    hilo = None
     try:
         print("=" * 60)
         print("PRUEBA DEL HILO DE MOB TRABADO")
@@ -254,6 +259,15 @@ if __name__ == "__main__":
         print("\n[INFO] Buscando ventana del juego...")
         game_window = GameWindow(GAME_WINDOW_TITLE)
         print(f"[OK] Ventana encontrada (Handle: {game_window.hwnd})")
+        
+        # Activar los hilos en el estado global para que puedan correr
+        estado.activar_hilo('mob_trabado')
+        estado.activar_hilo('detector_ocr')
+        
+        # Iniciar detector OCR en segundo plano para alimentar el estado
+        print("\n[INFO] Iniciando detector OCR en segundo plano...")
+        detector = HiloDetectorOCR(game_window.hwnd)
+        detector.iniciar()
         
         # Crear e iniciar hilo
         hilo = HiloMobTrabado(game_window.hwnd)
@@ -285,8 +299,11 @@ if __name__ == "__main__":
             time.sleep(0.5)
             
     except KeyboardInterrupt:
-        print("\n\n[INFO] Hilo detenido por el usuario")
-        hilo.detener()
+        print("\n\n[INFO] Deteniendo hilos...")
+        if hilo:
+            hilo.detener()
+        if detector:
+            detector.detener()
         print("[OK] Script finalizado")
         
     except Exception as e:

@@ -2,6 +2,7 @@
     "GAME_WINDOW_TITLE": "Kathana - The Coming of the Dark Ages",
     "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
     "UMBRAL_SIMILITUD": 0.7,
+    "ENV": "prod",
     "MOBS_OBJETIVO": [
         "Kaspa Saka",
         "Kaspa Konsa",
@@ -39,18 +40,25 @@
         "Kyukrong Gosu",
         "Pitton",
         "Kem Tonyo",
-        "Guryasu",
         "Dogurpasu",
         "Sik Chu",
-        "Dae Mi"
+        "Dae Mi",
+        "Kyoin",
+        "Mangriang",
+        "Sinkiu",
+        "Sinkiu Gosu",
+        "Ghorayogi",
+        "Nagamudra",
+        "Zaku",
+        "Balasta Tundela"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 0,
+        "repeticiones_f": 1,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {
         "1": {
-            "active": true,
+            "active": false,
             "time": 1.0
         },
         "2": {
@@ -62,12 +70,12 @@
             "time": 0.2
         },
         "4": {
-            "active": true,
+            "active": false,
             "time": 0.2
         },
         "5": {
-            "active": true,
-            "time": 25.0
+            "active": false,
+            "time": 50.0
         },
         "6": {
             "active": true,
@@ -111,13 +119,14 @@
                     "teclas": [
                         "4",
                         "7",
-                        "8"
+                        "8",
+                        "0"
                     ],
                     "intervalo_sin": 0.1
                 },
                 {
                     "nombre": "Nivel 3",
-                    "x": 160,
+                    "x": 170,
                     "y": 62,
                     "teclas": [
                         "4",
@@ -129,7 +138,7 @@
             "intervalo_con": 0.5
         },
         "mana": {
-            "x": 70,
+            "x": 90,
             "y": 80,
             "tecla": "9",
             "intervalo_con": 1.0,
@@ -143,14 +152,14 @@
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 7.0,
+        "timeout_mob": 8.0,
         "punto_click_primero": {
             "x": 655,
             "y": 406
         },
         "pixel_vida_mob": {
-            "x": 218,
-            "y": 116
+            "x": 217,
+            "y": 121
         },
         "puntos_clic": [
             {
@@ -173,5 +182,12 @@
         "veces": 1,
         "duracion_total": 1.0
     },
-    "ESCAPE_BY_MOB": {}
+    "ESCAPE_BY_MOB": {
+        "Kemsa Tonyo": {
+            "timeout": 15.0,
+            "vida": 15200,
+            "tiempo_escape_elite": 40.0,
+            "habilidades_elite": ""
+        }
+    }
 }

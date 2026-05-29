@@ -21,6 +21,7 @@ import pytesseract
 import re
 from shapely.geometry import Point, Polygon
 
+import configuracion
 from estado_objetivo import estado
 from configuracion import VK_CODES
 
@@ -196,7 +197,8 @@ class HiloControlArea:
         imagen_procesada = self._procesar_imagen_ocr(imagen)
         
         # [DEBUG] Descomentar para ver qué captura el OCR
-        # cv2.imwrite("debug_coordenadas.png", imagen_procesada)
+        if getattr(configuracion, 'ENV', 'prod') == 'dev':
+            cv2.imwrite("debug_coordenadas.png", imagen_procesada)
         
         # Configuración óptima: PSM 7 (línea de texto) + whitelist de números
         config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789/'
@@ -691,13 +693,15 @@ if __name__ == "__main__":
     imagen = control._capturar_region_coordenadas()
     
     # Guardar imagen para debug
-    cv2.imwrite("debug_coordenadas_raw.png", imagen)
-    print("Imagen guardada: debug_coordenadas_raw.png")
+    if getattr(configuracion, 'ENV', 'prod') == 'dev':
+        cv2.imwrite("debug_coordenadas_raw.png", imagen)
+        print("Imagen guardada: debug_coordenadas_raw.png")
     
     # Procesar y guardar
     procesada = control._procesar_imagen_ocr(imagen)
-    cv2.imwrite("debug_coordenadas_proc.png", procesada)
-    print("Imagen procesada: debug_coordenadas_proc.png")
+    if getattr(configuracion, 'ENV', 'prod') == 'dev':
+        cv2.imwrite("debug_coordenadas_proc.png", procesada)
+        print("Imagen procesada: debug_coordenadas_proc.png")
     
     # Extraer coordenadas
     coords = control._extraer_coordenadas(imagen)

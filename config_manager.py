@@ -59,6 +59,8 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
     # Intentar cargar desde JSON
     config_json = cargar_configuracion()
     if config_json:
+        if 'ENV' not in config_json:
+            config_json['ENV'] = 'prod'
         return config_json
     
     # Si no existe, importar valores por defecto desde configuracion.py
@@ -67,6 +69,7 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
         
         return {
             'GAME_WINDOW_TITLE': cfg.GAME_WINDOW_TITLE,
+            'ENV': getattr(cfg, 'ENV', 'prod'),
             'TESSERACT_PATH': cfg.TESSERACT_PATH,
             'UMBRAL_SIMILITUD': cfg.UMBRAL_SIMILITUD,
             'MOBS_OBJETIVO': cfg.MOBS_OBJETIVO,
@@ -94,6 +97,8 @@ def aplicar_configuracion_a_modulo(config: Dict[str, Any]) -> None:
     
     if 'GAME_WINDOW_TITLE' in config:
         cfg.GAME_WINDOW_TITLE = config['GAME_WINDOW_TITLE']
+    if 'ENV' in config:
+        cfg.ENV = config['ENV']
     if 'TESSERACT_PATH' in config:
         cfg.TESSERACT_PATH = config['TESSERACT_PATH']
     if 'UMBRAL_SIMILITUD' in config:

@@ -2,33 +2,8 @@
     "GAME_WINDOW_TITLE": "Kathana - The Coming of the Dark Ages",
     "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
     "UMBRAL_SIMILITUD": 0.8,
+    "ENV": "dev",
     "MOBS_OBJETIVO": [
-        "Ghorayogi (50)",
-        "Bongbo (76)",
-        "Pitton (75)",
-        "Guryasu (70)",
-        "Balasta Tundela (64)",
-        "Balasta Drbhika (62)",
-        "Visa Curmi (27)",
-        "Tarantula Zuzu (37)",
-        "Dae Mi (70)",
-        "Sik Chu (70)",
-        "Zonbu (72)",
-        "Bora (88)",
-        "Soko (84)",
-        "Chumsum (86)",
-        "Skarakoro (81)",
-        "Guryasu (75)",
-        "Mosa Tonyo (80)",
-        "Kemsa Tonyo (80)",
-        "Kemcha Tonyo (90)",
-        "Chang  Tonyo (90)",
-        "Kembo Tonyo (80)",
-        "Kembo Tonyo (75)",
-        "Mob Tonyo (75)",
-        "Pitton (75)",
-        "Dogurpasu (75)",
-        "Kubasang (58)",
         "Borangi",
         "Byokbo",
         "Zaku",
@@ -41,7 +16,11 @@
         "Pitton",
         "Dogurpasu",
         "Kemsa Tonyo",
-        "Kubasang"
+        "Kubasang",
+        "Kaspa Saka",
+        "Kaspa Konsa",
+        "Mangriang",
+        "Kyoin"
     ],
     "LOOT_DROP": {
         "repeticiones_f": 2,
@@ -94,7 +73,7 @@
             "niveles": [
                 {
                     "nombre": "Vida Media",
-                    "x": 190,
+                    "x": 180,
                     "y": 62,
                     "teclas": [
                         "7",
@@ -132,10 +111,14 @@
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 15.0,
+        "timeout_mob": 5.0,
         "punto_click_primero": {
             "x": 405,
             "y": 360
+        },
+        "pixel_vida_mob": {
+            "x": 217,
+            "y": 121
         },
         "puntos_clic": [
             {
@@ -213,12 +196,6 @@
             "tiempo_escape_elite": 25.0,
             "habilidades_elite": "1"
         },
-        "Pitton (75)": {
-            "timeout": 12.0,
-            "vida": 0,
-            "tiempo_escape_elite": 12.0,
-            "habilidades_elite": ""
-        },
         "Kyrukrong Gosu (68)": {
             "timeout": 12.0,
             "vida": 0,
@@ -246,6 +223,12 @@
         "Kubasang (58)": {
             "timeout": 6.0,
             "vida": 4850,
+            "tiempo_escape_elite": 15.0,
+            "habilidades_elite": ""
+        },
+        "Mangriang": {
+            "timeout": 15.0,
+            "vida": 0,
             "tiempo_escape_elite": 15.0,
             "habilidades_elite": ""
         }

@@ -136,7 +136,8 @@ class HiloDetectorOCR:
             img = np.array(screenshot)
             
             # [DEBUG] Guardar la imagen capturada cruda
-            # cv2.imwrite("debug_captura_raw.png", img)
+            if getattr(configuracion, 'ENV', 'prod') == 'dev':
+                cv2.imwrite("debug_captura_raw.png", img)
         
         return img
 
@@ -158,7 +159,8 @@ class HiloDetectorOCR:
             img = np.array(sct.grab(region))
             
             # [DEBUG] Guardar la imagen original para poder calibrar coordenadas.
-            cv2.imwrite("debug_vida_raw.png", img)
+            if getattr(configuracion, 'ENV', 'prod') == 'dev':
+                cv2.imwrite("debug_vida_raw.png", img)
         
         return img
     
@@ -186,7 +188,8 @@ class HiloDetectorOCR:
         imagen_procesada = self._procesar_imagen_para_ocr(imagen)
         
         # [DEBUG] Guardar imagen procesada (lo que ve el OCR)
-        # cv2.imwrite("debug_captura_proc.png", imagen_procesada)
+        if getattr(configuracion, 'ENV', 'prod') == 'dev':
+            cv2.imwrite("debug_captura_proc.png", imagen_procesada)
         
         # Configuración optimizada:
         # --psm 7: Tratar imagen como una sola línea de texto.
@@ -200,7 +203,8 @@ class HiloDetectorOCR:
         imagen_procesada = self._procesar_imagen_para_ocr(imagen)
         
         # [DEBUG] Guardar imagen en blanco y negro para ver con qué calidad va a leer el OCR
-        cv2.imwrite("debug_vida_proc.png", imagen_procesada)
+        if getattr(configuracion, 'ENV', 'prod') == 'dev':
+            cv2.imwrite("debug_vida_proc.png", imagen_procesada)
         
         # Whitelist para optimizar detección solo a números y /
         config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789/'
@@ -236,6 +240,48 @@ class HiloDetectorOCR:
         # Ejemplo: Si la vida máxima supera cierto umbral, lo consideramos de élite
         
         return False
+
+    def _es_mob_danado(self) -> bool:
+        """
+        Determina si un mob ha sido dañado.
+        Primero intenta usar el píxel de vida del mob configurado (pixel_vida_mob).
+        Si no está configurado (o es 1, 1), usa OCR como fallback.
+        """
+        escape_mob = getattr(configuracion, 'ESCAPE_MOB', {})
+        pixel_config = escape_mob.get("pixel_vida_mob", {"x": 1, "y": 1})
+        
+        if pixel_config.get('x', 1) > 1 and pixel_config.get('y', 1) > 1:
+            try:
+                from hilo_autocuracion import HiloAutocuracion
+                autocuracion = HiloAutocuracion(self.hwnd)
+                tiene_vida, color = autocuracion._tiene_vida(pixel_config['x'], pixel_config['y'])
+                
+                # Si tiene vida (rojo en la barra), no está dañado. Si no tiene vida (no rojo), está dañado.
+                print(f"[DEBUG ESCAPE] Verificando pixel vida mob ({pixel_config['x']}, {pixel_config['y']}): color={color}, tiene_vida={tiene_vida}")
+                return not tiene_vida
+            except Exception as e:
+                print(f"[DEBUG ESCAPE] Error al verificar pixel de vida: {e}")
+        
+        # Fallback a OCR
+        return self._es_mob_danado_ocr()
+
+    def _es_mob_danado_ocr(self) -> bool:
+        """Determina si un mob ha sido dañado usando OCR."""
+        # 1. Capturar región secundaria de vida
+        captura_vida = self._capturar_region_vida()
+        texto_vida = self._extraer_texto_vida(captura_vida)
+        
+        # 2. Parsear formato "1500/1500"
+        vida_actual, vida_maxima = self._parsear_vida(texto_vida)
+        
+        # Si falló la lectura de OCR (ambos 0), asumimos que está dañado (True) 
+        # para evitar falsos escapes constantes por fallos de lectura.
+        if vida_actual == 0 and vida_maxima == 0:
+            return True
+            
+        if vida_actual == vida_maxima:
+            return False
+        return True
     
     def _calcular_similitud(self, texto1: str, texto2: str) -> float:
         """Calcula la similitud entre dos cadenas de texto."""
@@ -346,6 +392,14 @@ class HiloDetectorOCR:
                 
                 # 5. Clasificar y actualizar estado
                 self._clasificar_objetivo(nombre)
+
+                # Depuración: Capturar y procesar imagen de vida siempre en entorno 'dev' para calibración
+                if getattr(configuracion, 'ENV', 'prod') == 'dev':
+                    try:
+                        captura_vida = self._capturar_region_vida()
+                        self._extraer_texto_vida(captura_vida)
+                    except Exception as e_vida:
+                        pass
 
             except Exception as e:
                 print(f"[DETECTOR OCR] Error: {e}")

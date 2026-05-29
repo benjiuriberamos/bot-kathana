@@ -3,12 +3,13 @@ Interfaz gráfica principal del bot Kathana.
 Interfaz de escritorio con PyQt5 para configurar y controlar el bot.
 """
 import sys
+import ctypes
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QPushButton, QLabel, QLineEdit, QSpinBox, QDoubleSpinBox,
     QListWidget, QListWidgetItem, QCheckBox, QTableWidget, QTableWidgetItem,
     QMessageBox, QFileDialog, QGroupBox, QGridLayout, QTextEdit, QFrame,
-    QSizePolicy
+    QSizePolicy, QComboBox
 )
 from PyQt5.QtCore import Qt, QTimer, QPointF
 from PyQt5.QtGui import QFont, QPainter, QPen, QBrush, QColor, QPolygonF
@@ -18,6 +19,113 @@ from config_manager import (
 )
 from bot_controller import BotController
 from estado_objetivo import estado
+
+from hilo_detector_ocr import (
+    OCR_LEFT_OFFSET, OCR_OFFSET_JUEGO, OCR_WIDTH, OCR_HEIGHT,
+    _obtener_altura_barra_titulo
+)
+
+
+class RegionOverlay(QWidget):
+    """Ventana superpuesta transparente para dibujar un marco rojo sobre la ventana del juego."""
+    
+    def __init__(self, parent, title_fn):
+        """
+        Args:
+            parent: Ventana principal (bot GUI) para propiedad y gestión de Z-order.
+            title_fn: Función o callback que retorna el título de la ventana a buscar.
+        """
+        super().__init__(parent)
+        self.title_fn = title_fn
+        self.user32 = ctypes.windll.user32
+        
+        # Configurar la ventana transparente y flotante
+        self.setWindowFlags(
+            Qt.FramelessWindowHint |
+            Qt.WindowStaysOnTopHint |
+            Qt.Tool |  # Evita que aparezca en la barra de tareas y ayuda a mantenerla flotante
+            Qt.WindowTransparentForInput  # Permite clics a través de la ventana
+        )
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        
+        # Timer para actualizar la posición relativa al juego
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.actualizar_posicion)
+        self.timer.start(100)  # Cada 100ms
+        
+        self.actualizar_posicion()
+
+    def actualizar_posicion(self):
+        try:
+            window_title = self.title_fn()
+            
+            # Guardas de seguridad para evitar títulos vacíos o procesar la propia ventana del bot
+            if not window_title or window_title.strip() == "":
+                self.hide()
+                return
+                
+            hwnd = self.user32.FindWindowW(None, window_title)
+            
+            # Obtener el HWND del bot GUI
+            parent_hwnd = int(self.parent().winId()) if self.parent() else 0
+            
+            # Si no se encuentra la ventana del juego, o coincide con la del bot, ocultar
+            if hwnd == 0 or hwnd == parent_hwnd:
+                self.hide()
+                return
+            
+            # Verificar si la ventana está minimizada o no está visible
+            if self.user32.IsIconic(hwnd) or not self.user32.IsWindowVisible(hwnd):
+                self.hide()
+                return
+                
+            # Verificar si el juego, el bot GUI o el overlay son la ventana activa
+            foreground_hwnd = self.user32.GetForegroundWindow()
+            overlay_hwnd = int(self.winId())
+            if (foreground_hwnd != hwnd and 
+                foreground_hwnd != parent_hwnd and 
+                foreground_hwnd != overlay_hwnd):
+                self.hide()
+                return
+            
+            # Obtener rectángulo de la ventana
+            from game_window import RECT
+            rect = RECT()
+            self.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+            
+            # ============================================================
+            # AJUSTA AQUÍ LA REGIÓN EXACTA QUE DESEAS ENMARCAR
+            # (Coordenadas relativas a la ventana del juego)
+            # ============================================================
+            x_offset = 0      # Desplazamiento horizontal desde la izquierda del juego
+            y_offset = 0      # Desplazamiento vertical desde abajo de la barra de título
+            width = 210       # Ancho del marco rojo
+            height = 105      # Alto del marco rojo
+            
+            # Calcular posición absoluta en pantalla
+            x = rect.left + x_offset
+            y = rect.top + _obtener_altura_barra_titulo() + y_offset
+            
+            # Ajustar geometría del overlay con un margen de 2px a cada lado para el contorno
+            self.setGeometry(x +5 , y - 2, width +7, height - 5)
+            
+            # Mostrar la ventana si no está visible
+            if not self.isVisible():
+                self.show()
+                
+        except Exception as e:
+            print(f"[Overlay] Error al actualizar posición: {e}")
+            self.hide()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        # Dibujar un marco rojo de 2 píxeles de grosor
+        pen = QPen(QColor(255, 0, 0), 2)
+        painter.setPen(pen)
+        # Dibujar el rectángulo ajustando para que el marco quede justo en el borde externo de la ventana del juego
+        painter.drawRect(1, 1, self.width() - 2, self.height() - 2)
+
 
 
 class GeneralTab(QWidget):
@@ -69,6 +177,24 @@ class GeneralTab(QWidget):
         self.umbral.setDecimals(2)
         self.umbral.setValue(self.config.get('UMBRAL_SIMILITUD', 0.70))
         grid.addWidget(self.umbral, 0, 1)
+        
+        group.setLayout(grid)
+        layout.addWidget(group)
+        
+        # Entorno de Ejecución (ENV)
+        group = QGroupBox("Entorno de Ejecución (ENV)")
+        grid = QGridLayout()
+        
+        grid.addWidget(QLabel("Entorno:"), 0, 0)
+        self.env_combo = QComboBox()
+        self.env_combo.addItems(["dev", "prod"])
+        self.env_combo.setCurrentText(self.config.get('ENV', 'prod'))
+        grid.addWidget(self.env_combo, 0, 1)
+        
+        # Nota explicativa del entorno
+        self.env_nota = QLabel("dev: Guarda imágenes de depuración (OCR, coordenadas, vida) en disco.\nprod: Optimiza rendimiento (no se guardan archivos de imagen).")
+        self.env_nota.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        grid.addWidget(self.env_nota, 1, 0, 1, 2)
         
         group.setLayout(grid)
         layout.addWidget(group)
@@ -138,6 +264,7 @@ class GeneralTab(QWidget):
             'GAME_WINDOW_TITLE': self.window_title.text(),
             'TESSERACT_PATH': self.tesseract_path.text(),
             'UMBRAL_SIMILITUD': self.umbral.value(),
+            'ENV': self.env_combo.currentText(),
         }
 
 
@@ -1113,6 +1240,9 @@ class MainWindow(QMainWindow):
         self.config = obtener_configuracion_completa()
         aplicar_configuracion_a_modulo(self.config)
         
+        # Inicializar el overlay como None
+        self.ocr_overlay = None
+        
         self.init_ui()
         
         # Timer para actualizar estado
@@ -1174,6 +1304,13 @@ class MainWindow(QMainWindow):
         btn_guardar.clicked.connect(self.guardar_configuracion)
         hbox_btns.addWidget(btn_guardar)
         
+        # Botón para mostrar/ocultar marco rojo sobre la ventana del juego
+        self.btn_mostrar_ocr = QPushButton("Marcar Ventana Juego")
+        self.btn_mostrar_ocr.setFont(QFont("Arial", 10, QFont.Bold))
+        self.btn_mostrar_ocr.setStyleSheet("background-color: #2196F3; color: white; padding: 10px;")
+        self.btn_mostrar_ocr.clicked.connect(self.toggle_window_overlay)
+        hbox_btns.addWidget(self.btn_mostrar_ocr)
+        
         hbox_btns.addStretch()
         
         self.btn_run_stop = QPushButton("RUN")
@@ -1214,6 +1351,7 @@ class MainWindow(QMainWindow):
         self.tab_general.window_title.setText(config.get('GAME_WINDOW_TITLE', ''))
         self.tab_general.tesseract_path.setText(config.get('TESSERACT_PATH', ''))
         self.tab_general.umbral.setValue(config.get('UMBRAL_SIMILITUD', 0.70))
+        self.tab_general.env_combo.setCurrentText(config.get('ENV', 'prod'))
         
         # Actualizar pestaña Mobs
         self.tab_mobs.lista.clear()
@@ -1404,6 +1542,43 @@ class MainWindow(QMainWindow):
         else:
             # Bot detenido
             pass
+
+    def toggle_window_overlay(self):
+        """Activa o desactiva la visualización de la ventana de juego con un marco rojo."""
+        if self.ocr_overlay is not None and self.ocr_overlay.isVisible():
+            # Desactivar
+            self.ocr_overlay.hide()
+            self.ocr_overlay.deleteLater()
+            self.ocr_overlay = None
+            self.btn_mostrar_ocr.setText("Marcar Ventana Juego")
+            self.btn_mostrar_ocr.setStyleSheet("background-color: #2196F3; color: white; padding: 10px;")
+        else:
+            # Activar
+            try:
+                # Verificar primero si la ventana del juego existe
+                from game_window import GameWindow
+                window_title = self.tab_general.window_title.text()
+                game_window = GameWindow(window_title)
+                # Forzar búsqueda de la ventana
+                _ = game_window.hwnd
+                
+                # Crear overlay parentado a self (MainWindow)
+                self.ocr_overlay = RegionOverlay(self, lambda: self.tab_general.window_title.text())
+                # Mostrar el overlay
+                self.ocr_overlay.show()
+                self.btn_mostrar_ocr.setText("Desmarcar Ventana Juego")
+                self.btn_mostrar_ocr.setStyleSheet("background-color: #f44336; color: white; padding: 10px;")
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"No se encontró la ventana del juego para mostrar la región: {e}")
+
+    def closeEvent(self, event):
+        """Asegura que el overlay se cierre al cerrar la ventana principal."""
+        if self.ocr_overlay is not None:
+            try:
+                self.ocr_overlay.close()
+            except:
+                pass
+        super().closeEvent(event)
 
 
 def main():

@@ -8,6 +8,9 @@ Aquí se definen todos los parámetros configurables.
 # ============================================================
 GAME_WINDOW_TITLE = "Kathana - The Coming of the Dark Ages"
 
+# Entorno de ejecución: 'dev' (guarda imágenes de depuración) o 'prod' (no guarda imágenes)
+ENV = "prod"
+
 # Ruta de Tesseract OCR
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
