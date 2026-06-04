@@ -81,6 +81,11 @@ class HiloObservadorObjetivo:
             if tipo_actual == TipoObjetivo.NULO:
                 # Sin objetivo -> presionar E
                 self._presionar_tecla_para_seleccionar()
+                
+                # Esperar a que la interfaz del juego muestre la barra del mob
+                delay_post = getattr(configuracion, 'OBSERVADOR_OBJETIVO', {}).get('delay_post_seleccion', 0.15)
+                time.sleep(delay_post)
+                
                 self.hilo_detector_ocr._aplicar_deteccion()
                 estado.desactivar_hilo('detector_ocr')
 

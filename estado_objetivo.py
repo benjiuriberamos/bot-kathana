@@ -50,6 +50,7 @@ class EstadoObjetivo:
             'tipo_anterior': TipoObjetivo.NULO.value,
             'nombre': '',
             'nombre_coincidente': '',
+            'ultimo_nombre_mob': '',
             'similitud': 0.0,
             'es_elite': False,
             'timestamp_cambio': time.time(),
@@ -138,6 +139,12 @@ class EstadoObjetivo:
         with self._lock:
             self._estado['timestamp_cambio'] = time.time()
             print("[ESTADO] ⏱️ Timestamp reseteado - Contador vuelve a 0")
+            
+    def limpiar_tipo_anterior(self):
+        """Limpia el tipo anterior para evitar procesar transiciones duplicadas."""
+        with self._lock:
+            self._estado['tipo_anterior'] = TipoObjetivo.NULO.value
+            print("[ESTADO] 🧹 Tipo anterior limpiado para evitar loops de transiciones")
     
     # ============================================================
     # Propiedades del estado
@@ -162,6 +169,11 @@ class EstadoObjetivo:
     def nombre_coincidente(self) -> str:
         """Retorna el nombre coincidente de la lista (mob o drop)."""
         return self._estado['nombre_coincidente']
+        
+    @property
+    def ultimo_nombre_mob(self) -> str:
+        """Retorna el nombre del último mob fijado."""
+        return self._estado.get('ultimo_nombre_mob', '')
     
     @property
     def similitud(self) -> float:
@@ -247,6 +259,7 @@ class EstadoObjetivo:
         self._estado['tipo'] = TipoObjetivo.MOB.value
         self._estado['nombre'] = nombre_detectado or ''
         self._estado['nombre_coincidente'] = nombre_coincidente or ''
+        self._estado['ultimo_nombre_mob'] = nombre_coincidente or ''
         self._estado['similitud'] = similitud
         self._estado['es_elite'] = es_elite
         

@@ -150,18 +150,13 @@ class GeneralTab(QWidget):
         group.setLayout(grid)
         layout.addWidget(group)
         
-        # Tesseract OCR
-        group = QGroupBox("Tesseract OCR")
+        # EasyOCR
+        group = QGroupBox("EasyOCR Configuration")
         grid = QGridLayout()
         
-        grid.addWidget(QLabel("Ruta de Tesseract:"), 0, 0)
-        hbox = QHBoxLayout()
-        self.tesseract_path = QLineEdit(self.config.get('TESSERACT_PATH', ''))
-        btn_browse = QPushButton("Buscar...")
-        btn_browse.clicked.connect(self.buscar_tesseract)
-        hbox.addWidget(self.tesseract_path)
-        hbox.addWidget(btn_browse)
-        grid.addLayout(hbox, 0, 1)
+        self.easyocr_gpu = QCheckBox("Habilitar GPU (CUDA)")
+        self.easyocr_gpu.setChecked(self.config.get('EASYOCR_GPU', True))
+        grid.addWidget(self.easyocr_gpu, 0, 0, 1, 2)
         
         group.setLayout(grid)
         layout.addWidget(group)
@@ -239,7 +234,7 @@ class GeneralTab(QWidget):
             </ul>
             <h4 class="warning">⚠️ Requisitos</h4>
             <ul>
-                <li>Tesseract OCR debe estar instalado en el sistema.</li>
+                <li>EasyOCR descargará automáticamente los modelos en su primer inicio.</li>
                 <li>El juego debe estar abierto y visible antes de iniciar el bot.</li>
             </ul>
         """)
@@ -251,20 +246,149 @@ class GeneralTab(QWidget):
         layout.addStretch()
         self.setLayout(layout)
     
-    def buscar_tesseract(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Seleccionar Tesseract OCR", "", "Ejecutables (*.exe)"
-        )
-        if file_path:
-            self.tesseract_path.setText(file_path)
-    
     def obtener_valores(self) -> dict:
         """Retorna los valores actuales de la pestaña."""
         return {
             'GAME_WINDOW_TITLE': self.window_title.text(),
-            'TESSERACT_PATH': self.tesseract_path.text(),
+            'EASYOCR_GPU': self.easyocr_gpu.isChecked(),
             'UMBRAL_SIMILITUD': self.umbral.value(),
             'ENV': self.env_combo.currentText(),
+        }
+
+
+class MobsTab(QWidget):
+    """Pestaña de configuración de Mobs con columnas de cazar y loot."""
+    
+    def __init__(self, config: dict):
+        super().__init__()
+        self.config = config
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Tabla de Mobs (3 columnas: Nombre, Cazar, Loot)
+        self.tabla = QTableWidget()
+        self.tabla.setColumnCount(3)
+        self.tabla.setHorizontalHeaderLabels(["Nombre del Mob", "Cazar", "Recoger Loot (F)"])
+        self.tabla.horizontalHeader().setStretchLastSection(True)
+        # Ajustar anchos
+        self.tabla.setColumnWidth(0, 200)
+        self.tabla.setColumnWidth(1, 100)
+        
+        # Cargar datos
+        mobs_todos = self.config.get('MOBS_TODOS', [])
+        if not mobs_todos:
+            mobs_todos = self.config.get('MOBS_OBJETIVO', [])
+        mobs_objetivo = self.config.get('MOBS_OBJETIVO', [])
+        mobs_loot = self.config.get('MOBS_LOOT', [])
+        
+        # Filtrar duplicados y nombres vacíos
+        mobs_todos = [m for m in mobs_todos if m]
+        
+        self.tabla.setRowCount(len(mobs_todos))
+        for row, mob in enumerate(mobs_todos):
+            self.tabla.setItem(row, 0, QTableWidgetItem(mob))
+            
+            # Checkbox Cazar
+            checkbox_cazar = QCheckBox()
+            checkbox_cazar.setChecked(mob in mobs_objetivo)
+            
+            widget_cazar = QWidget()
+            h_layout_cazar = QHBoxLayout(widget_cazar)
+            h_layout_cazar.addWidget(checkbox_cazar)
+            h_layout_cazar.setAlignment(Qt.AlignCenter)
+            h_layout_cazar.setContentsMargins(0, 0, 0, 0)
+            self.tabla.setCellWidget(row, 1, widget_cazar)
+            
+            # Checkbox Loot
+            checkbox_loot = QCheckBox()
+            checkbox_loot.setChecked(mob in mobs_loot)
+            
+            widget_loot = QWidget()
+            h_layout_loot = QHBoxLayout(widget_loot)
+            h_layout_loot.addWidget(checkbox_loot)
+            h_layout_loot.setAlignment(Qt.AlignCenter)
+            h_layout_loot.setContentsMargins(0, 0, 0, 0)
+            self.tabla.setCellWidget(row, 2, widget_loot)
+            
+        layout.addWidget(self.tabla)
+        
+        # Botones para agregar/eliminar
+        hbox = QHBoxLayout()
+        btn_agregar = QPushButton("+ Agregar Mob")
+        btn_agregar.clicked.connect(self.agregar_mob)
+        btn_eliminar = QPushButton("- Eliminar Mob")
+        btn_eliminar.clicked.connect(self.eliminar_mob)
+        
+        hbox.addWidget(btn_agregar)
+        hbox.addWidget(btn_eliminar)
+        hbox.addStretch()
+        layout.addLayout(hbox)
+        
+        self.setLayout(layout)
+        
+    def agregar_mob(self):
+        from PyQt5.QtWidgets import QInputDialog
+        text, ok = QInputDialog.getText(self, "Agregar Mob", "Nombre del mob:")
+        if ok and text:
+            row = self.tabla.rowCount()
+            self.tabla.insertRow(row)
+            self.tabla.setItem(row, 0, QTableWidgetItem(text))
+            
+            # Checkbox Cazar (activo por defecto)
+            checkbox_cazar = QCheckBox()
+            checkbox_cazar.setChecked(True)
+            widget_cazar = QWidget()
+            h_layout_cazar = QHBoxLayout(widget_cazar)
+            h_layout_cazar.addWidget(checkbox_cazar)
+            h_layout_cazar.setAlignment(Qt.AlignCenter)
+            h_layout_cazar.setContentsMargins(0, 0, 0, 0)
+            self.tabla.setCellWidget(row, 1, widget_cazar)
+            
+            # Checkbox Loot (activo por defecto)
+            checkbox_loot = QCheckBox()
+            checkbox_loot.setChecked(True)
+            widget_loot = QWidget()
+            h_layout_loot = QHBoxLayout(widget_loot)
+            h_layout_loot.addWidget(checkbox_loot)
+            h_layout_loot.setAlignment(Qt.AlignCenter)
+            h_layout_loot.setContentsMargins(0, 0, 0, 0)
+            self.tabla.setCellWidget(row, 2, widget_loot)
+            
+    def eliminar_mob(self):
+        current_row = self.tabla.currentRow()
+        if current_row >= 0:
+            self.tabla.removeRow(current_row)
+            
+    def obtener_valores(self) -> dict:
+        mobs_todos = []
+        mobs_objetivo = []
+        mobs_loot = []
+        
+        for row in range(self.tabla.rowCount()):
+            item_name = self.tabla.item(row, 0)
+            if item_name:
+                nombre = item_name.text().strip()
+                if nombre:
+                    mobs_todos.append(nombre)
+                    # Cazar (columna 1)
+                    widget_cazar = self.tabla.cellWidget(row, 1)
+                    if widget_cazar:
+                        checkbox_cazar = widget_cazar.findChild(QCheckBox)
+                        if checkbox_cazar and checkbox_cazar.isChecked():
+                            mobs_objetivo.append(nombre)
+                    # Loot (columna 2)
+                    widget_loot = self.tabla.cellWidget(row, 2)
+                    if widget_loot:
+                        checkbox_loot = widget_loot.findChild(QCheckBox)
+                        if checkbox_loot and checkbox_loot.isChecked():
+                            mobs_loot.append(nombre)
+                            
+        return {
+            'MOBS_TODOS': mobs_todos,
+            'MOBS_OBJETIVO': mobs_objetivo,
+            'MOBS_LOOT': mobs_loot
         }
 
 
@@ -1277,8 +1401,8 @@ class MainWindow(QMainWindow):
         self.tab_general = GeneralTab(self.config)
         self.tabs.addTab(self.tab_general, "General")
         
-        self.tab_mobs = ListaEditableTab(self.config, 'MOBS_OBJETIVO', 'Mob')
-        self.tabs.addTab(self.tab_mobs, "Mobs Objetivo")
+        self.tab_mobs = MobsTab(self.config)
+        self.tabs.addTab(self.tab_mobs, "Mobs")
         
         self.tab_loot = LootDropTab(self.config)
         self.tabs.addTab(self.tab_loot, "Loot/Drop")
@@ -1349,15 +1473,40 @@ class MainWindow(QMainWindow):
         """Actualiza todos los campos de la interfaz con los valores de la configuración."""
         # Actualizar pestaña General
         self.tab_general.window_title.setText(config.get('GAME_WINDOW_TITLE', ''))
-        self.tab_general.tesseract_path.setText(config.get('TESSERACT_PATH', ''))
+        self.tab_general.easyocr_gpu.setChecked(config.get('EASYOCR_GPU', True))
         self.tab_general.umbral.setValue(config.get('UMBRAL_SIMILITUD', 0.70))
         self.tab_general.env_combo.setCurrentText(config.get('ENV', 'prod'))
         
         # Actualizar pestaña Mobs
-        self.tab_mobs.lista.clear()
-        for mob in config.get('MOBS_OBJETIVO', []):
-            if mob:
-                self.tab_mobs.lista.addItem(mob)
+        mobs_todos = config.get('MOBS_TODOS', [])
+        if not mobs_todos:
+            mobs_todos = config.get('MOBS_OBJETIVO', [])
+        mobs_objetivo = config.get('MOBS_OBJETIVO', [])
+        mobs_loot = config.get('MOBS_LOOT', [])
+        
+        self.tab_mobs.tabla.setRowCount(len(mobs_todos))
+        for row, mob in enumerate(mobs_todos):
+            self.tab_mobs.tabla.setItem(row, 0, QTableWidgetItem(mob))
+            
+            # Cazar
+            checkbox_cazar = QCheckBox()
+            checkbox_cazar.setChecked(mob in mobs_objetivo)
+            widget_cazar = QWidget()
+            h_layout_cazar = QHBoxLayout(widget_cazar)
+            h_layout_cazar.addWidget(checkbox_cazar)
+            h_layout_cazar.setAlignment(Qt.AlignCenter)
+            h_layout_cazar.setContentsMargins(0, 0, 0, 0)
+            self.tab_mobs.tabla.setCellWidget(row, 1, widget_cazar)
+            
+            # Recoger Loot
+            checkbox_loot = QCheckBox()
+            checkbox_loot.setChecked(mob in mobs_loot)
+            widget_loot = QWidget()
+            h_layout_loot = QHBoxLayout(widget_loot)
+            h_layout_loot.addWidget(checkbox_loot)
+            h_layout_loot.setAlignment(Qt.AlignCenter)
+            h_layout_loot.setContentsMargins(0, 0, 0, 0)
+            self.tab_mobs.tabla.setCellWidget(row, 2, widget_loot)
         
         # Actualizar pestaña Loot
         loot_config = config.get('LOOT_DROP', {})
@@ -1469,7 +1618,7 @@ class MainWindow(QMainWindow):
         
         # Recopilar valores de todas las pestañas
         config.update(self.tab_general.obtener_valores())
-        config['MOBS_OBJETIVO'] = self.tab_mobs.obtener_valores()
+        config.update(self.tab_mobs.obtener_valores())
         config.update(self.tab_loot.obtener_valores())
         config.update(self.tab_habilidades.obtener_valores())
         config.update(self.tab_autocuracion.obtener_valores())

@@ -61,6 +61,10 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
     if config_json:
         if 'ENV' not in config_json:
             config_json['ENV'] = 'prod'
+        if 'MOBS_LOOT' not in config_json:
+            config_json['MOBS_LOOT'] = []
+        if 'MOBS_TODOS' not in config_json:
+            config_json['MOBS_TODOS'] = config_json.get('MOBS_OBJETIVO', [])
         return config_json
     
     # Si no existe, importar valores por defecto desde configuracion.py
@@ -70,9 +74,11 @@ def obtener_configuracion_completa() -> Dict[str, Any]:
         return {
             'GAME_WINDOW_TITLE': cfg.GAME_WINDOW_TITLE,
             'ENV': getattr(cfg, 'ENV', 'prod'),
-            'TESSERACT_PATH': cfg.TESSERACT_PATH,
+            'EASYOCR_GPU': getattr(cfg, 'EASYOCR_GPU', True),
             'UMBRAL_SIMILITUD': cfg.UMBRAL_SIMILITUD,
             'MOBS_OBJETIVO': cfg.MOBS_OBJETIVO,
+            'MOBS_LOOT': getattr(cfg, 'MOBS_LOOT', []),
+            'MOBS_TODOS': getattr(cfg, 'MOBS_TODOS', []),
             'LOOT_DROP': cfg.LOOT_DROP,
             'HABILIDADES': cfg.HABILIDADES,
             'AUTOCURACION': cfg.AUTOCURACION,
@@ -99,12 +105,16 @@ def aplicar_configuracion_a_modulo(config: Dict[str, Any]) -> None:
         cfg.GAME_WINDOW_TITLE = config['GAME_WINDOW_TITLE']
     if 'ENV' in config:
         cfg.ENV = config['ENV']
-    if 'TESSERACT_PATH' in config:
-        cfg.TESSERACT_PATH = config['TESSERACT_PATH']
+    if 'EASYOCR_GPU' in config:
+        cfg.EASYOCR_GPU = config['EASYOCR_GPU']
     if 'UMBRAL_SIMILITUD' in config:
         cfg.UMBRAL_SIMILITUD = config['UMBRAL_SIMILITUD']
     if 'MOBS_OBJETIVO' in config:
         cfg.MOBS_OBJETIVO = config['MOBS_OBJETIVO']
+    if 'MOBS_LOOT' in config:
+        cfg.MOBS_LOOT = config['MOBS_LOOT']
+    if 'MOBS_TODOS' in config:
+        cfg.MOBS_TODOS = config['MOBS_TODOS']
     if 'LOOT_DROP' in config:
         cfg.LOOT_DROP = config['LOOT_DROP']
     if 'HABILIDADES' in config:

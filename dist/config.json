@@ -53,7 +53,7 @@
         "Balasta Tundela"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 1,
+        "repeticiones_f": 0,
         "intervalo_f": 0.5
     },
     "HABILIDADES": {

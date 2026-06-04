@@ -106,17 +106,27 @@ class HiloRecogerDrop:
 
             info = estado.obtener_info()
 
-            # Detectar transición MOB -> NULO
+            # Detectar transición MOB -> NULO o MOB -> DROP
             if (
                 info["tipo"] in [TipoObjetivo.NULO, TipoObjetivo.DROP]
                 and info["tipo_anterior"] == TipoObjetivo.MOB
                 and not estado.ejecutando_loot
             ):
-                estado.pausar_todos_los_hilos_excepto('recoger_drop')
-                self._ejecutar_loot()
-                # Resetear timestamp para que el contador arranque en 0
-                estado.resetear_timestamp()
-                estado.pausar_todos_los_hilos_excepto('observador_objetivo')
+                ultimo_mob = estado.ultimo_nombre_mob
+                mobs_loot = getattr(configuracion, 'MOBS_LOOT', [])
+                
+                # Solo lootear si el mob está en la lista de loot
+                if ultimo_mob in mobs_loot:
+                    estado.pausar_todos_los_hilos_excepto('recoger_drop')
+                    self._ejecutar_loot()
+                    # Resetear timestamp para que el contador arranque en 0
+                    estado.resetear_timestamp()
+                    estado.pausar_todos_los_hilos_excepto('observador_objetivo')
+                else:
+                    print(f"[LOOT] ℹ️ Ignorando loot para '{ultimo_mob}' (no está configurado en Mobs para Loot)")
+                    # Limpiar tipo anterior para evitar bucles de transiciones repetidas
+                    estado.limpiar_tipo_anterior()
+                    estado.pausar_todos_los_hilos_excepto('observador_objetivo')
 
             time.sleep(0.1)
 

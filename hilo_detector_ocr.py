@@ -10,7 +10,6 @@ import ctypes
 import time
 import threading
 import mss
-import pytesseract
 import cv2
 import numpy as np
 import re
@@ -19,16 +18,10 @@ from difflib import SequenceMatcher
 import configuracion
 from estado_objetivo import estado, TipoObjetivo
 from configuracion import (
-    TESSERACT_PATH, UMBRAL_SIMILITUD,
+    UMBRAL_SIMILITUD,
     MOBS_OBJETIVO, VK_CODES
 )
-
-# Configurar Tesseract (se actualizará dinámicamente)
-def _configurar_tesseract():
-    """Configura Tesseract con la ruta actual del módulo."""
-    pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
-
-_configurar_tesseract()
+from ocr_reader import OCRReader
 
 # ============================================================
 # CONSTANTES FIJAS DEL ÁREA DE CAPTURA OCR
@@ -191,11 +184,8 @@ class HiloDetectorOCR:
         if getattr(configuracion, 'ENV', 'prod') == 'dev':
             cv2.imwrite("debug_captura_proc.png", imagen_procesada)
         
-        # Configuración optimizada:
-        # --psm 7: Tratar imagen como una sola línea de texto.
-        # -c tessedit_char_whitelist: Solo permitir letras, números, espacios y paréntesis.
-        config_tesseract = '--psm 7 --oem 3 -l eng'
-        texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
+        # Extraer texto con EasyOCR
+        texto = OCRReader.image_to_string(imagen_procesada)
         return texto.strip()
     
     def _extraer_texto_vida(self, imagen: np.ndarray) -> str:
@@ -206,9 +196,8 @@ class HiloDetectorOCR:
         if getattr(configuracion, 'ENV', 'prod') == 'dev':
             cv2.imwrite("debug_vida_proc.png", imagen_procesada)
         
-        # Whitelist para optimizar detección solo a números y /
-        config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789/'
-        texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
+        # Whitelist para optimizar detección solo a números y / con EasyOCR
+        texto = OCRReader.image_to_string(imagen_procesada, allowlist='0123456789/')
         print(f"[OCR] Texto de vida: {texto}")
         return texto.strip()
 
@@ -376,9 +365,6 @@ class HiloDetectorOCR:
                 continue
             
             try:
-                # Actualizar configuración de Tesseract por si cambió
-                pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
-                
                 # 2. Capturar la región del objetivo
                 captura = self._capturar_region_objetivo()
                 

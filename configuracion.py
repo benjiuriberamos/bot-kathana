@@ -11,8 +11,8 @@ GAME_WINDOW_TITLE = "Kathana - The Coming of the Dark Ages"
 # Entorno de ejecución: 'dev' (guarda imágenes de depuración) o 'prod' (no guarda imágenes)
 ENV = "prod"
 
-# Ruta de Tesseract OCR
-TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Habilitar GPU para EasyOCR (usa CPU automáticamente si no hay soporte CUDA)
+EASYOCR_GPU = True
 
 # ============================================================
 # NOTA: La región de captura OCR se calcula automáticamente
@@ -70,8 +70,13 @@ MOBS_OBJETIVO = [
     # "Zarku (46)",
     # "Zarku Rudhira (48)",
 
-    # Agrega más mobs aquí...
 ]
+
+# Mobs de los cuales se recogerá loot (F)
+MOBS_LOOT = []
+
+# Todos los mobs que aparecen en la tabla de la interfaz
+MOBS_TODOS = []
 
 # ============================================================
 # CONFIGURACIÓN DE LOOT/DROP
@@ -127,6 +132,7 @@ OBSERVADOR_OBJETIVO = {
     'timeout_drop': 3.0,         # Segundos antes de presionar E en estado DROP
     'intervalo_revision': 0.1,   # Intervalo de revisión del estado (segundos)
     'tecla_seleccionar': 'E',    # Tecla para seleccionar objetivo (E, TAB, Q, etc.)
+    'delay_post_seleccion': 0.15, # Segundos de espera tras presionar E antes del OCR (para que cargue la interfaz)
 }
 
 # ============================================================

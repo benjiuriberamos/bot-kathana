@@ -17,21 +17,13 @@ import threading
 import mss
 import cv2
 import numpy as np
-import pytesseract
 import re
 from shapely.geometry import Point, Polygon
 
 import configuracion
 from estado_objetivo import estado
 from configuracion import VK_CODES
-
-# Configurar Tesseract (se actualizará dinámicamente)
-def _configurar_tesseract():
-    """Configura Tesseract con la ruta actual del módulo."""
-    import configuracion
-    pytesseract.pytesseract.tesseract_cmd = configuracion.TESSERACT_PATH
-
-_configurar_tesseract()
+from ocr_reader import OCRReader
 
 # Constantes para mensajes de teclado
 WM_KEYDOWN = 0x0100
@@ -200,9 +192,8 @@ class HiloControlArea:
         if getattr(configuracion, 'ENV', 'prod') == 'dev':
             cv2.imwrite("debug_coordenadas.png", imagen_procesada)
         
-        # Configuración óptima: PSM 7 (línea de texto) + whitelist de números
-        config_tesseract = '--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789/'
-        texto = pytesseract.image_to_string(imagen_procesada, config=config_tesseract)
+        # Usar EasyOCR con whitelist de números y barra
+        texto = OCRReader.image_to_string(imagen_procesada, allowlist='0123456789/')
         texto = texto.strip()
         
         # [DEBUG] Descomentar para ver qué detecta el OCR

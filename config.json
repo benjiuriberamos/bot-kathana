@@ -1,14 +1,12 @@
 {
-    "GAME_WINDOW_TITLE": "Kathana - The Coming of the Dark Ages",
-    "TESSERACT_PATH": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    "GAME_WINDOW_TITLE": "Kathana - The Reign of Shadow",
+    "EASYOCR_GPU": false,
     "UMBRAL_SIMILITUD": 0.8,
-    "ENV": "dev",
-    "MOBS_OBJETIVO": [
+    "ENV": "prod",
+    "MOBS_TODOS": [
         "Borangi",
         "Byokbo",
         "Zaku",
-        "Kubasang",
-        "Choniokusin",
         "Zinmon",
         "Zinmon Gosu",
         "Balasta Drbhika",
@@ -20,10 +18,87 @@
         "Kaspa Saka",
         "Kaspa Konsa",
         "Mangriang",
-        "Kyoin"
+        "Kyoin",
+        "Chumsum",
+        "Kyukrong",
+        "Kyukrong Gosu",
+        "Guryasu",
+        "Dae Mi",
+        "Sik Chu",
+        "Mob Tonyo",
+        "Kungbo Tonyo",
+        "Mosa Tonyo",
+        "Bongbo",
+        "Baoku",
+        "Kaspa Miinero",
+        "Ban",
+        "Ban Gosu",
+        "Chang Tonyo",
+        "Kusa Tonyo",
+        "Skarakoro",
+        "Soko",
+        "Bora",
+        "Lampara",
+        "Kembo Tonyo",
+        "Mosa Tonyo"
+    ],
+    "MOBS_OBJETIVO": [
+        "Borangi",
+        "Byokbo",
+        "Zaku",
+        "Zinmon",
+        "Zinmon Gosu",
+        "Balasta Drbhika",
+        "Balasta Tundela",
+        "Pitton",
+        "Dogurpasu",
+        "Kemsa Tonyo",
+        "Kaspa Saka",
+        "Kaspa Konsa",
+        "Mangriang",
+        "Kyoin",
+        "Chumsum",
+        "Kyukrong",
+        "Kyukrong Gosu",
+        "Guryasu",
+        "Dae Mi",
+        "Sik Chu",
+        "Mob Tonyo",
+        "Kungbo Tonyo",
+        "Mosa Tonyo",
+        "Bongbo",
+        "Baoku",
+        "Kaspa Miinero",
+        "Ban",
+        "Ban Gosu",
+        "Chang Tonyo",
+        "Kusa Tonyo",
+        "Skarakoro",
+        "Soko",
+        "Bora",
+        "Lampara",
+        "Kembo Tonyo",
+        "Mosa Tonyo"
+    ],
+    "MOBS_LOOT": [
+        "Balasta Tundela",
+        "Dogurpasu",
+        "Chumsum",
+        "Guryasu",
+        "Kungbo Tonyo",
+        "Mosa Tonyo",
+        "Bongbo",
+        "Baoku",
+        "Kaspa Miinero",
+        "Ban Gosu",
+        "Kusa Tonyo",
+        "Soko",
+        "Bora",
+        "Lampara",
+        "Mosa Tonyo"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 2,
+        "repeticiones_f": 0,
         "intervalo_f": 0.4
     },
     "HABILIDADES": {
@@ -40,12 +115,12 @@
             "time": 0.3
         },
         "4": {
-            "active": false,
+            "active": true,
             "time": 1.0
         },
         "5": {
-            "active": false,
-            "time": 0.3
+            "active": true,
+            "time": 40.0
         },
         "6": {
             "active": true,
@@ -60,7 +135,7 @@
             "time": 1.0
         },
         "9": {
-            "active": true,
+            "active": false,
             "time": 75.0
         },
         "R": {
@@ -72,26 +147,26 @@
         "vida": {
             "niveles": [
                 {
+                    "nombre": "Nivel 3",
+                    "x": 150,
+                    "y": 62,
+                    "teclas": [
+                        "8",
+                        "7",
+                        "4"
+                    ],
+                    "intervalo_sin": 0.1
+                },
+                {
                     "nombre": "Vida Media",
                     "x": 180,
                     "y": 62,
                     "teclas": [
                         "7",
-                        "4"
+                        "4",
+                        "0"
                     ],
                     "intervalo_sin": 0.4
-                },
-                {
-                    "nombre": "Nivel 3",
-                    "x": 90,
-                    "y": 62,
-                    "teclas": [
-                        "8",
-                        "4",
-                        "5",
-                        "7"
-                    ],
-                    "intervalo_sin": 0.1
                 }
             ],
             "intervalo_con": 1.0
@@ -99,7 +174,7 @@
         "mana": {
             "x": 80,
             "y": 80,
-            "tecla": "0",
+            "tecla": "9",
             "intervalo_con": 1.0,
             "intervalo_sin": 0.5
         }
@@ -107,18 +182,19 @@
     "OBSERVADOR_OBJETIVO": {
         "tecla_seleccionar": "E",
         "timeout_drop": 0.3,
-        "intervalo_revision": 0.2
+        "intervalo_revision": 0.2,
+        "delay_post_seleccion": 0.15
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 5.0,
+        "timeout_mob": 8.0,
         "punto_click_primero": {
-            "x": 405,
-            "y": 360
+            "x": 644,
+            "y": 388
         },
         "pixel_vida_mob": {
-            "x": 217,
-            "y": 121
+            "x": 214,
+            "y": 118
         },
         "puntos_clic": [
             {
@@ -141,96 +217,5 @@
         "veces": 2,
         "duracion_total": 1.0
     },
-    "ESCAPE_BY_MOB": {
-        "Sinkiu (53)": {
-            "timeout": 20.0,
-            "vida": 0,
-            "tiempo_escape_elite": 20.0,
-            "habilidades_elite": ""
-        },
-        "Zinkiu Gosu (58)": {
-            "timeout": 25.0,
-            "vida": 0,
-            "tiempo_escape_elite": 25.0,
-            "habilidades_elite": ""
-        },
-        "Mangrian (50)": {
-            "timeout": 15.0,
-            "vida": 0,
-            "tiempo_escape_elite": 15.0,
-            "habilidades_elite": ""
-        },
-        "Kyoin (48)": {
-            "timeout": 15.0,
-            "vida": 0,
-            "tiempo_escape_elite": 15.0,
-            "habilidades_elite": ""
-        },
-        "Sinkiu Gosu (58)": {
-            "timeout": 25.0,
-            "vida": 0,
-            "tiempo_escape_elite": 25.0,
-            "habilidades_elite": ""
-        },
-        "Bongbo (76)": {
-            "timeout": 30.0,
-            "vida": 0,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": ""
-        },
-        "Baoku (74)": {
-            "timeout": 30.0,
-            "vida": 0,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": ""
-        },
-        "Dogurpasu": {
-            "timeout": 20.0,
-            "vida": 15200,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": "1"
-        },
-        "Guryasu": {
-            "timeout": 15.0,
-            "vida": 11800,
-            "tiempo_escape_elite": 25.0,
-            "habilidades_elite": "1"
-        },
-        "Kyrukrong Gosu (68)": {
-            "timeout": 12.0,
-            "vida": 0,
-            "tiempo_escape_elite": 12.0,
-            "habilidades_elite": ""
-        },
-        "Kyrukrong (66)": {
-            "timeout": 12.0,
-            "vida": 0,
-            "tiempo_escape_elite": 12.0,
-            "habilidades_elite": ""
-        },
-        "Zonbu (72)": {
-            "timeout": 50.0,
-            "vida": 0,
-            "tiempo_escape_elite": 50.0,
-            "habilidades_elite": ""
-        },
-        "Kemsa Tonyo": {
-            "timeout": 20.0,
-            "vida": 15200,
-            "tiempo_escape_elite": 30.0,
-            "habilidades_elite": "1"
-        },
-        "Kubasang (58)": {
-            "timeout": 6.0,
-            "vida": 4850,
-            "tiempo_escape_elite": 15.0,
-            "habilidades_elite": ""
-        },
-        "Mangriang": {
-            "timeout": 15.0,
-            "vida": 0,
-            "tiempo_escape_elite": 15.0,
-            "habilidades_elite": ""
-        }
-    }
+    "ESCAPE_BY_MOB": {}
 }
