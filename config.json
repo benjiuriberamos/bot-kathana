@@ -1,7 +1,7 @@
 {
     "GAME_WINDOW_TITLE": "Kathana - The Reign of Shadow",
     "EASYOCR_GPU": false,
-    "UMBRAL_SIMILITUD": 0.8,
+    "UMBRAL_SIMILITUD": 0.75,
     "ENV": "prod",
     "MOBS_TODOS": [
         "Borangi",
@@ -40,7 +40,18 @@
         "Bora",
         "Lampara",
         "Kembo Tonyo",
-        "Mosa Tonyo"
+        "Mosa Tonyo",
+        "Raphu Kibyo",
+        "Raphu",
+        "Kemsa Tonyo",
+        "Dadati",
+        "Zonbu",
+        "Ban Zangkun",
+        "Ban Dopang",
+        "Yakku",
+        "Chang Tonyo",
+        "Kemcha Tonyo",
+        "Dae Mi"
     ],
     "MOBS_OBJETIVO": [
         "Borangi",
@@ -78,45 +89,69 @@
         "Bora",
         "Lampara",
         "Kembo Tonyo",
-        "Mosa Tonyo"
+        "Mosa Tonyo",
+        "Raphu Kibyo",
+        "Raphu",
+        "Kemsa Tonyo",
+        "Dadati",
+        "Zonbu",
+        "Ban Zangkun",
+        "Ban Dopang",
+        "Yakku",
+        "Chang Tonyo",
+        "Kemcha Tonyo",
+        "Dae Mi"
     ],
     "MOBS_LOOT": [
         "Balasta Tundela",
+        "Pitton",
         "Dogurpasu",
+        "Kemsa Tonyo",
         "Chumsum",
         "Guryasu",
+        "Dae Mi",
+        "Mob Tonyo",
         "Kungbo Tonyo",
         "Mosa Tonyo",
         "Bongbo",
         "Baoku",
         "Kaspa Miinero",
         "Ban Gosu",
+        "Chang Tonyo",
         "Kusa Tonyo",
-        "Soko",
         "Bora",
         "Lampara",
-        "Mosa Tonyo"
+        "Mosa Tonyo",
+        "Raphu",
+        "Kemsa Tonyo",
+        "Dadati",
+        "Zonbu",
+        "Ban Dopang",
+        "Yakku",
+        "Chang Tonyo",
+        "Kemcha Tonyo",
+        "Dae Mi"
     ],
     "LOOT_DROP": {
-        "repeticiones_f": 0,
-        "intervalo_f": 0.4
+        "repeticiones_f": 2,
+        "intervalo_f": 0.1
     },
     "HABILIDADES": {
         "1": {
-            "active": false,
+            "active": true,
             "time": 1.0
         },
         "2": {
             "active": true,
-            "time": 0.3
+            "time": 1.0
         },
         "3": {
             "active": true,
-            "time": 0.3
+            "time": 1.0
         },
         "4": {
-            "active": true,
-            "time": 1.0
+            "active": false,
+            "time": 4.0
         },
         "5": {
             "active": true,
@@ -153,7 +188,8 @@
                     "teclas": [
                         "8",
                         "7",
-                        "4"
+                        "4",
+                        "0"
                     ],
                     "intervalo_sin": 0.1
                 },
@@ -163,8 +199,7 @@
                     "y": 62,
                     "teclas": [
                         "7",
-                        "4",
-                        "0"
+                        "4"
                     ],
                     "intervalo_sin": 0.4
                 }
@@ -182,19 +217,18 @@
     "OBSERVADOR_OBJETIVO": {
         "tecla_seleccionar": "E",
         "timeout_drop": 0.3,
-        "intervalo_revision": 0.2,
-        "delay_post_seleccion": 0.15
+        "intervalo_revision": 0.2
     },
     "ESCAPE_MOB": {
         "pjname": "Toronja",
-        "timeout_mob": 8.0,
+        "timeout_mob": 15.0,
         "punto_click_primero": {
             "x": 644,
             "y": 388
         },
         "pixel_vida_mob": {
             "x": 214,
-            "y": 118
+            "y": 111
         },
         "puntos_clic": [
             {
@@ -214,8 +248,15 @@
                 "y": 450
             }
         ],
-        "veces": 2,
-        "duracion_total": 1.0
+        "veces": 4,
+        "duracion_total": 2.0
     },
-    "ESCAPE_BY_MOB": {}
+    "ESCAPE_BY_MOB": {
+        "Dadati": {
+            "timeout": 1.0,
+            "vida": 1,
+            "tiempo_escape_elite": 1.0,
+            "habilidades_elite": ""
+        }
+    }
 }
